@@ -1,4 +1,4 @@
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore
+/c#.netcode/VMware.VCDRService_legacy/bin
+/c#.netcode/VMware.VCDRService_legacy/obj
+/c#.netcode/.vs
+/c#.netcode/VCDRTest/Properties/launchSettings.json
