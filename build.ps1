@@ -267,6 +267,15 @@ $VariableTemplateCoreNetPSD1=@"
   
 $TemplateHeaderPSD1+$VariableTemplateCoreNetPSD1+$TemplatePSD1|set-content  "$VCDRSERVICE\VMware.VCDRService.psd1" 
 #endregion NetSelectorDescriptor
+$ZipFolder= "publish"
+if ( -not (Test-Path $ZipFolder)) {  
+  #PowerShell Create directory if not exists
+  New-Item $ZipFolder -ItemType Directory
+}
+
+$DestZip="$ZipFolder\VMware.VCDRService-"+$Version.replace( ".","-") +".zip"
+Compress-Archive -Path @(".\VMware.VCDRService",".\install.ps1","LICENSE","NOTICE","open_source_licenses.txt") -DestinationPath $DestZip
+
 
 Write-Host 
 Write-Host "Done."
