@@ -57,7 +57,7 @@ Copy-Item -path "$VCDRSERVICE_SRC\bin\$CONFIGURATION\$FRAMEWORK\*.dll" -Destinat
 Copy-Item -path "$VCDRSERVICE_LEGACY_SRC\bin\$CONFIGURATION\*.dll" -Destination "$VCDRSERVICE\net" 
 Copy-Item -path "$VCDRSERVICE_PWSH_SOURCE\VMware.VCDRService.psm1" -Destination "$VCDRSERVICE\net" 
 Copy-Item -path "$VCDRSERVICE_PWSH_SOURCE\VMware.VCDRService.psm1" -Destination "$VCDRSERVICE\netcore"  
-Copy-Item -Path "$BASEDIR\LICENSE.txt"  -Destination "$VCDRSERVICE" 
+Copy-Item -Path "$BASEDIR\LICENSE"  -Destination "$VCDRSERVICE" 
 Copy-Item -Path "$BASEDIR\open_source_licenses.txt"  -Destination "$VCDRSERVICE" 
 #endregion CopyFiles
 
