@@ -1,4 +1,3 @@
-# VCDR Powershell CmdLets
 # PowerShell cmdlets for VMware Cloud Disaster Recovery
 
 # What is VMware PowerCLI for VMware Cloud Disaster Recovery
