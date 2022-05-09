@@ -120,3 +120,9 @@ The only supported build platform is Microsoft Windows 10/11. In theory MACOSX s
 **Important !!!!!** 
 
 **build.cmd** and **.\build.ps1** are going to replace any powershell scripts and c# code for .NET4.7, with the corrispondent code for core.NET. Any change to the source code should be apply to the Core.NET code
+
+
+
+**Contributing**
+
+The vmware-powercli-for-vmware-cloud-disaster-recovery project team welcomes contributions from the community. Before you start working with container-service-extension-templates, please read our Developer Certificate of Origin. All contributions to this repository must be signed as described on that page. Your signature certifies that you wrote the patch or have the right to pass it on as an open-source patch. For more detailed information, refer to CONTRIBUTING.md.
