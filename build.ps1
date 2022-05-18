@@ -1,7 +1,7 @@
 ﻿[CmdletBinding()]
 Param(
-
-    [Parameter(Mandatory = $false)] [string] $Version ="7.23.0.0"
+    [Parameter(Mandatory = $false)] [string] $Version ="7.22.2",
+    [Parameter(Mandatory = $false)] [string] $NuGetApiKey
 )
 #Set-StrictMode -Version 3
 $ErrorActionPreference = "Stop"
@@ -93,7 +93,7 @@ $TemplatePSD1=@"
 
   # Description of the functionality provided by this module
   Description          = 'PowerCLI VMware Cloud Disaster Recovery module'
-
+  
   # Processor architecture (None, X86, Amd64) required by this module
   # ProcessorArchitecture = ''
 
@@ -139,19 +139,19 @@ $TemplatePSD1=@"
       # Tags = @()
 
       # A URL to the license for this module.
-      # LicenseUri = ''
+      LicenseUri = 'https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery/blob/main/LICENSE'
 
       # A URL to the main website for this project.
-      # ProjectUri = ''
+      ProjectUri = 'https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery'
 
       # A URL to an icon representing this module.
       IconUri      = 'https://raw.githubusercontent.com/vmware/PowerCLI-Example-Scripts/1710f7ccbdd9fe9a3ab3f000e920fa6e8e042c63/resources/powercli-psgallery-icon.svg'
 
       # ReleaseNotes of this module
-      ReleaseNotes = 'Beta Version of the VCDR PowerShell CmdLets'
+      ReleaseNotes = 'Alpha Version of the VCDR PowerShell CmdLets'
 
       # Prerelease string of this module
-      Prerelease   = 'Beta'
+      Prerelease   = 'Alpha'
 
       # Flag to indicate whether the module requires explicit user acceptance for install/update/save
       # RequireLicenseAcceptance = $false
@@ -239,7 +239,7 @@ $VariableTemplateNetPSD1=@"
 
 
   # Minimum version of the Windows PowerShell engine required by this module
-  PowerShellVersion = '3.0'
+  PowerShellVersion = '5.1'
 
   # Minimum version of the Windows PowerShell host required by this module
   PowerShellHostVersion = ''
@@ -262,6 +262,10 @@ $VariableTemplateCoreNetPSD1=@"
 
   # Supported PSEditions
   CompatiblePSEditions = 'Desktop', 'Core'
+
+  # Minimum version of the Windows PowerShell engine required by this module
+  PowerShellVersion = '5.1'
+
 "@
 
 $TemplateHeaderPSD1+$VariableTemplateCoreNetPSD1+$TemplatePSD1|set-content  "$VCDRSERVICE\VMware.VCDRService.psd1"
@@ -279,6 +283,9 @@ if ( Test-Path $DestZip) {
 }
 Compress-Archive -Path @(".\VMware.VCDRService",".\install.ps1","LICENSE","NOTICE","open_source_licenses.txt") -DestinationPath $DestZip
 
-
+if ( $NuGetApiKey ) {
+  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -WhatIf -Verbose
+  Write-Output "To Publish run:`n  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -Verbose"
+}
 Write-Output "`nDone.`n"
 Write-Output "To install execute .\install.ps1 -Install CurrentUser`n"
