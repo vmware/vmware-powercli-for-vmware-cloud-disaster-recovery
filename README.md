@@ -35,9 +35,9 @@ First steps
 
 - Connect-VCDRServer 
 - Disconnect-VCDRServer
-- Get-VCDRCloudFileSystems
-- Get-VCDRProtectedSites
-- Get-VCDRProtectionGroups
+- Get-VCDRCloudFileSystem
+- Get-VCDRProtectedSite
+- Get-VCDRProtectionGroup
 - Get-VCDRSnapshot
 - Get-VCDRProtectedVm
 - Get-VCDRRecoverySddc
@@ -49,12 +49,12 @@ First steps
 _Script-1_
 ```
 $token=_"your VMC token"
-$server = "vcdr-54-245-72-122.staging.app.vcdr.vmware.com"
+$server = "vcdr-aaa-bbb-ccc-ddd.app.vcdr.vmware.com"
 $VCDR=Connect-VCDRServer  -server $server -token $token
 $RecoverySDDC=Get-VCDRRecoverySDDC 
-$cloudFileSystem=Get-VCDRCloudFileSystems -name "cloud-backup-1"
-$ProtectedSites=Get-VCDRProtectedSites -CloudFileSystem $cloudFileSystem
-$ProtectionGroups=Get-VCDRProtectionGroups  -CloudFileSystem $cloudFileSystem
+$cloudFileSystem=Get-VCDRCloudFileSystem -name "cloud-backup-1"
+$ProtectedSites=Get-VCDRProtectedSite -CloudFileSystem $cloudFileSystem
+$ProtectionGroups=Get-VCDRProtectionGroup  -CloudFileSystem $cloudFileSystem
 $Snapshots=Get-VCDRSnapshot -ProtectionGroups $ProtectionGroups
 $Vms=Get-VCDRProtectedVm -CloudFileSystem $cloudFileSystem
 Disconnect-VCDRServer -server $VCDR
@@ -63,20 +63,20 @@ Disconnect-VCDRServer -server $VCDR
 _Script-2_
 ```
 $token=_"your VMC token"
-$server = "vcdr-54-245-72-122.staging.app.vcdr.vmware.com"
+$server = "vcdr-aaa-bbb-ccc-ddd.app.vcdr.vmware.com"
 Connect-VCDRServer  -server $server -token $token 
 
 #Return any Protection Site or each CloudFileSystem
-Get-VCDRCloudFileSystems| Get-VCDRProtectedSites  
+Get-VCDRCloudFileSystem| Get-VCDRProtectedSite  
 
 #Return any Protection Group or each CloudFileSystem
-Get-VCDRCloudFileSystems|Get-VCDRProtectionGroups  
+Get-VCDRCloudFileSystem|Get-VCDRProtectionGroup  
 
 #Return any Snapshot for each CloudFileSystem
-Get-VCDRCloudFileSystems|Get-VCDRProtectionGroups|Get-VCDRSnapshot 
+Get-VCDRCloudFileSystem|Get-VCDRProtectionGroup|Get-VCDRSnapshot 
 
 #Return any Protected VM for each CloudFileSystem
-Get-VCDRCloudFileSystems|Get-VCDRProtectedVm  
+Get-VCDRCloudFileSystem|Get-VCDRProtectedVm  
 
 Disconnect-VCDRServer -server $VCDR
 
