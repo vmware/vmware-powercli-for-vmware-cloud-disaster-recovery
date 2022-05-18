@@ -22,6 +22,12 @@ The backend of these Cmdlets (VCDR API) is still in the beta phase, and as a con
 
 **Installation** 
 
+**Using PowerShell Gallery** 
+
+```Install-Module -Name VMware.VCDRService -AllowPrerelease```
+
+**Using GitHub code**
+
 First steps 
 1. Install .Net runtime and PowerShell
 2. Open PowerShell Core (pwsh) or Windows PowerShell (powershell.exe)
