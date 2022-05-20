@@ -23,8 +23,7 @@ The backend of these Cmdlets (VCDR API) is still in the beta phase, and as a con
 **Installation** 
 
 **Using PowerShell Gallery** 
-
-```Install-Module -Name VMware.VCDRService -AllowPrerelease```
+```Install-Module -Name VMware.VCDRService```
 
 **Using GitHub code**
 

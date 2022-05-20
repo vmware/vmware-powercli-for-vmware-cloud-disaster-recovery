@@ -1,6 +1,6 @@
 ﻿[CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $false)] [string] $Version ="7.22.2",
+    [Parameter(Mandatory = $false)] [string] $Version ="7.22.2.1",
     [Parameter(Mandatory = $false)] [string] $NuGetApiKey
 )
 #Set-StrictMode -Version 3
@@ -148,10 +148,10 @@ $TemplatePSD1=@"
       IconUri      = 'https://raw.githubusercontent.com/vmware/PowerCLI-Example-Scripts/1710f7ccbdd9fe9a3ab3f000e920fa6e8e042c63/resources/powercli-psgallery-icon.svg'
 
       # ReleaseNotes of this module
-      ReleaseNotes = 'Alpha Version of the VCDR PowerShell CmdLets'
+      ReleaseNotes = 'VMware Cloud Disaster Recovery PowerShell CmdLets'
 
       # Prerelease string of this module
-      Prerelease   = 'Alpha'
+      #Prerelease   = 'Alpha'
 
       # Flag to indicate whether the module requires explicit user acceptance for install/update/save
       # RequireLicenseAcceptance = $false
@@ -274,16 +274,15 @@ $ZipFolder= "publish"
 if ( -not (Test-Path $ZipFolder)) {
   #PowerShell Create directory if not exists
   New-Item $ZipFolder -ItemType Directory
+}else {
+  remove-item  -path $ZipFolder\*.zip
 }
 
 $DestZip="$ZipFolder\VMware.VCDRService-"+$Version.replace( ".","-") +".zip"
-if ( Test-Path $DestZip) {
-  #PowerShell Create directory if not exists
-  remove-item -path $DestZip
-}
 Compress-Archive -Path @(".\VMware.VCDRService",".\install.ps1","LICENSE","NOTICE","open_source_licenses.txt") -DestinationPath $DestZip
 
 if ( $NuGetApiKey ) {
+  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
   Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -WhatIf -Verbose
   Write-Output "To Publish run:`n  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -Verbose"
 }

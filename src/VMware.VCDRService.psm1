@@ -89,7 +89,7 @@ Function Connect-VCDRServer {
 
 <#
         .SYNOPSIS
-            This cmdlet close the connection to a VCDR Server system.
+            This cmdlet closes the connection to a VCDR Server system.
         .DESCRIPTION
               This cmdlet closes the connection to a VCDR Server system. You can have multiple connections to a
     server. In order to disconnect from a server, you must close all active connections to it. By default,
@@ -163,9 +163,9 @@ Function Disconnect-VCDRServer {
 
 <#
         .SYNOPSIS
-            list of all cloud file systems
+            List of cloud file systems
         .DESCRIPTION
-            Get a list of all deployed cloud file systems in your VMware Cloud DR organization with details.
+            Get a list of any deployed cloud file systems in your VMware Cloud DR organization with details.
         .PARAMETER Server
             Specifies the VCDR Server systems on which you want to run the cmdlet. If no value is provided or `$null value is passed to this parameter, the command runs on the default servers. For more information about default servers, see the description of Connect-VCDRServer.
         .PARAMETER Name
@@ -241,11 +241,11 @@ Function Get-VCDRCloudFileSystem {
 
 <#
         .SYNOPSIS
-            list of all protected sites
+            List of protected sites.
         .DESCRIPTION
             Get a list of all protected sites associated with an individual cloud file system with details.
             A protected site is a logical grouping of vCenters with VMs that are "protected" by the DRaaS Connector using snapshot replication to a cloud file system.
-            A protected site is associated with exactly one cloud file system.
+            A protected site is associated with a unique cloud file system.
        .PARAMETER CloudFileSystem
             Unique identifier of an individual cloud file system. Use the cloud file system ID of the cloud file system for which you want to get a list of all protected sites.
         .PARAMETER Vcenter
@@ -331,7 +331,7 @@ Function Get-VCDRProtectedSite {
 
 <#
         .SYNOPSIS
-            list of all protection groups associated with an individual cloud file system
+            List of any protection groups associated with an individual cloud file system.
         .DESCRIPTION
             Get a detailed list of all protection groups associated with an individual cloud file system
             A protection group defines a collection of VMs on a protected site that are being snapshotted and replicated to a cloud file system.
@@ -415,7 +415,7 @@ Function Get-VCDRProtectionGroup {
 
 <#
         .SYNOPSIS
-            list of all snpashots in a specific protection group.
+            List of any snpashots associated to a specific protection group.
         .DESCRIPTION
             Get a list of all snpashots in a specific protection group.
             A protection group snapshot encodes the point-in-time state of all the VMs defined in a specific protection group.
@@ -491,7 +491,7 @@ Function Get-VCDRSnapshot {
 
 <#
         .SYNOPSIS
-            list of all protection VM associated with an individual cloud file system
+            List of VMs associated with an individual cloud file system
         .DESCRIPTION
           A "protected" VM is a VM that is contained in at least one protection group snapshot that has been replicated to a cloud file system.
        .PARAMETER CloudFileSystem
@@ -592,7 +592,7 @@ Function Get-VCDRProtectedVm {
 
 <#
         .SYNOPSIS
-            list of all Recovery SDDC
+            List of Recovery SDDCs
         .DESCRIPTION
             A Recovery SDDC is a VMware Cloud (VMC) software-defined datacenter (SDDC) where protected VMs are created, configured, and powered on during VMware Cloud DR failover.
         .PARAMETER Name
@@ -674,5 +674,3 @@ Export-ModuleMember -Function Get-VCDRProtectionGroup
 Export-ModuleMember -Function Get-VCDRSnapshot
 Export-ModuleMember -Function Get-VCDRProtectedVm
 Export-ModuleMember -Function Get-VCDRRecoverySddc
-#region Execution examples
-#endregion
