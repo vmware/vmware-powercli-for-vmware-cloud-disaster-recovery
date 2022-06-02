@@ -276,7 +276,7 @@ Function Get-VCDRProtectedSite {
     [OutputType([VMware.VCDRService.ProtectedSite[]])]
     Param(
         [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Cloud FileSystem")]
-        [VMware.VCDRService.CloudFileSystem]  $CloudFileSystem,
+        [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
         [Parameter( Mandatory = $false, HelpMessage = "vCenter")]
         [String[]]  $Vcenter ,
         [Parameter( Mandatory = $false, HelpMessage = "Protection Group")]
@@ -306,21 +306,23 @@ Function Get-VCDRProtectedSite {
 
     }
     Process {
-        [String]   $Cursor = $Null
-        $protectedSites = [VMware.VCDRService.GetProtectedSitesResponse[]]@()
-        do {
-            $protectedSitesResponse = $Server.GetProtectedSites($CloudFileSystem.Id, $PagingSize, $protectedSitesFilterSpec, $Cursor)
-            if (! $protectedSitesResponse) {
-                break
+        foreach($Cfs in $CloudFileSystem) {
+            $CloudFileSystemId=$Cfs.Id
+            [String]   $Cursor = $Null
+            $protectedSites = [VMware.VCDRService.GetProtectedSitesResponse[]]@()
+            do {
+                $protectedSitesResponse = $Server.GetProtectedSites($CloudFileSystemId, $PagingSize, $protectedSitesFilterSpec, $Cursor)
+                if (! $protectedSitesResponse) {
+                    break
+                }
+                $protectedSites += $protectedSitesResponse.Protected_sites
+                $Cursor = $protectedSitesResponse.Cursor
+            }  while ($Cursor -and $protectedSitesResponse.Protected_sites -gt 0 )
+
+            foreach ($ps in $protectedSites) {
+                $result += $Server.GetProtectedSiteDetails($CloudFileSystemId, $ps.Id)
             }
-            $protectedSites += $protectedSitesResponse.Protected_sites
-            $Cursor = $protectedSitesResponse.Cursor
-        }  while ($Cursor -and $protectedSitesResponse.Protected_sites -gt 0 )
-
-        foreach ($ps in $protectedSites) {
-            $result += $Server.GetProtectedSiteDetails($CloudFileSystem.Id, $ps.Id)
         }
-
     }
     End {
         return $result
@@ -365,7 +367,7 @@ Function Get-VCDRProtectionGroup {
     [OutputType([VMware.VCDRService.ProtectionGroup[]])]
     Param(
         [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Cloud FileSystem")]
-        [VMware.VCDRService.CloudFileSystem]  $CloudFileSystem,
+        [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
 
         [Parameter( Mandatory = $false, HelpMessage = "vCenter ID")]
         [String[]]  $Vcenter ,
@@ -394,17 +396,20 @@ Function Get-VCDRProtectionGroup {
         }
     }
     Process {
-        $protectedGroups = [VMware.VCDRService.GetProtectionGroupsResponse[]]@()
-        [String]   $Cursor = $Null
-        do {
-            $protectedGroupsResponse = $Server.GetProtectionGroups($CloudFileSystem.Id, $PagingSize, $protectionGroupsFilterSpec, $Cursor)
-            if (!$protectedGroupsResponse.Protection_groups ) { break }
-            $protectedGroups += $protectedGroupsResponse.Protection_groups
-            $Cursor = $protectedGroupsResponse.Cursor
-        }  while ($Cursor -and $protectedGroupsResponse.Protection_groups -gt 0 )
+        foreach($Cfs in $CloudFileSystem) {
+            $CloudFileSystemId=$Cfs.Id
+            $protectedGroups = [VMware.VCDRService.GetProtectionGroupsResponse[]]@()
+            [String]   $Cursor = $Null
+            do {
+                $protectedGroupsResponse = $Server.GetProtectionGroups($CloudFileSystemId, $PagingSize, $protectionGroupsFilterSpec, $Cursor)
+                if (!$protectedGroupsResponse.Protection_groups ) { break }
+                $protectedGroups += $protectedGroupsResponse.Protection_groups
+                $Cursor = $protectedGroupsResponse.Cursor
+            }  while ($Cursor -and $protectedGroupsResponse.Protection_groups -gt 0 )
 
-        foreach ($ps in $protectedGroups) {
-            $result += $Server.GetProtectionGroupDetails($CloudFileSystem.Id, $ps.Id)
+            foreach ($ps in $protectedGroups) {
+                $result += $Server.GetProtectionGroupDetails($CloudFileSystemId, $ps.Id)
+            }
         }
     }
     End {
@@ -525,7 +530,7 @@ Function Get-VCDRProtectedVm {
     [OutputType([VMware.VCDRService.VmSummary[]])]
     Param(
         [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Cloud FileSystem")]
-        [VMware.VCDRService.CloudFileSystem]  $CloudFileSystem,
+        [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
 
         [Parameter( Mandatory = $false, HelpMessage = "vCenter ID")]
         [String[]]  $Vcenter ,
@@ -574,17 +579,20 @@ Function Get-VCDRProtectedVm {
 
     }
     Process {
-        [String] $Cursor = $Null
-        do {
-            $protectedVirtualMachines = $Server.GetProtectedVirtualMachines($CloudFileSystem.Id, $PagingSize, $VmsFilterSpec, $Cursor)
-            if (!$protectedVirtualMachines) { break }
-            if (!$protectedVirtualMachines.Vms ) { break }
-            $result += $protectedVirtualMachines.Vms
-            $Cursor = $protectedVirtualMachines.Cursor
-        }  while ($Cursor -and $protectedVirtualMachines.Vms.Count -gt 0 )
-        return $result
+        foreach($Cfs in $CloudFileSystem) {  
+            $CloudFileSystemId=$Cfs.Id
+            [String] $Cursor = $Null
+            do {
+                $protectedVirtualMachines = $Server.GetProtectedVirtualMachines($CloudFileSystemId, $PagingSize, $VmsFilterSpec, $Cursor)
+                if (!$protectedVirtualMachines) { break }
+                if (!$protectedVirtualMachines.Vms ) { break }
+                $result += $protectedVirtualMachines.Vms
+                $Cursor = $protectedVirtualMachines.Cursor
+            }  while ($Cursor -and $protectedVirtualMachines.Vms.Count -gt 0 )
+        } 
     }
     End {
+        return $result
     }
 }
 

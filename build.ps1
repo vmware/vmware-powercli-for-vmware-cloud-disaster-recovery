@@ -1,16 +1,20 @@
 ﻿[CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $false)] [string] $Version ="7.22.2.1",
+    [Parameter(Mandatory = $false)] [string] $Version ,
     [Parameter(Mandatory = $false)] [string] $NuGetApiKey
 )
 #Set-StrictMode -Version 3
 $ErrorActionPreference = "Stop"
-
+ 
 $CONFIGURATION = "Release"
 $FRAMEWORK = "netcoreapp3.1"
 $LEGACYFRAMEWORK="4.7"
 $PLATFORM = "AnyCPU"
 $BASEDIR = "."
+
+if ([string]::IsNullOrEmpty($Version)){
+  $Version = Get-Content -path $BASEDIR\VERSION
+}
 $VCDRSERVICE_DIRNAME = "VMware.VCDRService"
 $VCDRSERVICELEGACY_DIRNAME = "VMware.VCDRService_legacy"
 $VCDRSERVICE_SRC = "$BASEDIR\c#.netcode\$VCDRSERVICE_DIRNAME"
