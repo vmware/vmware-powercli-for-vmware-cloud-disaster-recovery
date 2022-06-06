@@ -48,6 +48,7 @@ First steps
 - Get-VCDRRecoverySddc
 </details>
 
+An introduction to the VCDR PowerShell CmdLets is available here https://vmc.techzone.vmware.com/getting-started-powercli-vmware-cloud-disaster-recovery 
 
 **Sample scripts**
 
