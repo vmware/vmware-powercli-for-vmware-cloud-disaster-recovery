@@ -53,6 +53,12 @@ namespace VMware.VCDRService
             var renewal = TimeSpan.FromSeconds(_tokenExpiration - _tokenExpiration / 4);
             timer = new Timer(Callback, null, renewal, renewal);
         }
+
+        partial void UpdateJsonSerializerSettings(Newtonsoft.Json.JsonSerializerSettings settings)
+        {
+            settings.MaxDepth = 120;
+        }
+
         public void Callback(object state)
         {
             if (Verbose)
