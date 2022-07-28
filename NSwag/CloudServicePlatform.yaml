@@ -1,0 +1,213 @@
+openapi: 3.0.3
+info:
+  version: '3.0'
+  title: CSP API Reference
+  description:  |-
+    VMware Cloud Services Platform (CSP) Provides a rich set of APIs for identity and access management.<p>
+    <b>Prerequisite</b><p>
+    To complete this task, you need to have access to the CSP console. In order to generate the CSP authorization token, you must obtain a VMware Cloud Services Platform (CSP) API Token from your web browser after logging in to the following page&colon; https&#58;//console.cloud.vmware.com/csp/gateway/portal/#/user/tokens. The API token is then used to obtain an access token, which is used for all subsequent VMware CSP API calls.<p>
+    <b>Exchange API Token for Access Token.</b> All VMware CSP API calls require a valid access token, which can be acquired programmatically using the following POST command where you pass the previously generated API token (“refresh token” and “API token” are used synonymously).
+    <pre><code class="language-bash"> curl -s -X POST \\
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-H &quot;Content-Type&#58; application/json&quot; \\
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-H "Accept&#58; application/json" \\
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;https&#58;//console.cloud.vmware.com/csp/gateway/am/api/auth/api-tokens/authorize?refresh_token={refresh-token} </code></pre>
+    This CSP API is defined at&#58;  https&#58;//console.cloud.vmware.com/csp/gateway/am/api/swagger-ui.html#/Authentication/getAccessTokenByApiRefreshTokenUsingPOST<p>
+   
+   
+  license:
+    name: 'Copyright (c) 2022 VMware, Inc. All rights reserved.'
+  
+     
+servers:
+  - description: Identity and Access Management - Cloud Services Platform
+    url: 'https://console.cloud.vmware.com/csp/gateway/am/api' 
+        
+tags:
+  - name: authentication
+    description: 'APIs to manage and handle api-tokens and refresh-tokens to authenticate and make authorized API connections. Previously called an ‘OAuth Refresh token’, an API token authorizes access per organization.'
+paths:
+  /auth/api-tokens/authorize:
+    post:
+      summary: 'The end-point is for exchanging organization scoped API-tokens only, that are obtained from the CSP web console.'
+      operationId: GetApiTokenAuthorize
+      tags:
+        - authentication 
+      requestBody:
+        required: true
+        description: 'Get access token by api refresh token request.'
+        content:   
+          application/x-www-form-urlencoded:
+            schema:
+               $ref: '#/components/schemas/GetAccessTokenByApiRefreshTokenRequest' 
+              
+      responses:
+        '200':
+          description: OK. The request succeeded.
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/AccessTokenDto'
+        '400':
+          description: Bad request. The server could not understand the request. 
+        '404':
+          description: Not found. The server cannot find the specified resource. 
+        '409':
+          description: The request could not be processed due to a conflict. 
+        '429':
+          description: The user has sent too many requests. 
+        '500':
+          description: An unexpected error has occurred while processing the request.
+  /auth/api-tokens/details:
+    post:
+      summary: 'Get details of an unexpired org scoped API-token that was previously obtained via CSP web console.'
+      operationId: GetApiTokenDetails 
+      tags:
+        - authentication 
+      requestBody:
+        required: true 
+        content:   
+          application/json:
+            schema:
+               $ref: '#/components/schemas/GetApiTokenDetailsRequest'
+      responses:
+        '200':
+          description: OK. The request succeeded.
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/ApiTokenDetailsDto'
+        '400':
+          description: Bad request. The server could not understand the request.
+        '401':
+          description: Unauthorized. The client has not authenticated.
+        '403':
+          description: Forbidden. The client is not authorized.
+        '404':
+          description: Not found. The server cannot find the specified resource. 
+        '409':
+          description: The request could not be processed due to a conflict.
+        '429':
+          description: The user has sent too many requests. 
+        '500':
+          description: An unexpected error has occurred while processing the request. 
+security:
+  - api_key: []
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      description: 'In order to make VMware CSP REST API calls, you need to authenticate with the Cloud Services Platform, which will exchange an API token for an access token. This access token must be provided in the header for al VMware CSP REST API calls.<p>'
+      in: header
+      name: csp-auth-token
+       
+  schemas:
+    ApiTokenDetailsDto: 
+      type: object
+      properties:
+        acct:
+          description: The identifier of the user, configured to log in to the Identity provider.
+          type: string
+          nullable: true
+        createdAt:
+          description: 'The timestamp the token was created at (measured in number of seconds since 1/1/1970 UTC).'
+          type: number
+          format: int64
+          nullable: true
+        domain:
+          description: 'The identity provider (IdP) domain of the user.'
+          type: string
+          nullable: true
+        expiresAt:
+          description: 'The timestamp the token expires at (measured in number of seconds since 1/1/1970 UTC).'
+          type: number
+          format: int64
+          nullable: true
+        idpId:
+          description: The identifier of the identity provider.
+          type: string
+          nullable: true
+        lastUsedAt:
+          description: 'The timestamp the token was last used (measured in number of seconds since 1/1/1970 UTC).'
+          type: number
+          format: int64
+          nullable: true
+        orgId:
+          description: Unique identifier (GUID) of the organization.
+          type: string
+          nullable: true
+        token:
+          description: The value of the API token.
+          type: string
+          nullable: true
+        tokenId:
+          description: The unique identifier of the API token.
+          type: string
+          nullable: true
+        tokenName:
+          description: The name of the API token.
+          type: string
+          nullable: true
+        userId:
+          description: The unique identifier of the user, on behalf of which the token was issued.
+          type: string
+          nullable: true
+        userName:
+          description: Deprecated. The username of the user to whom the api token belongs
+          type: string
+          nullable: true
+
+    AccessTokenDto: 
+      type: object
+      required:
+        - access_token
+        - expires_in
+        - id_token
+        - refresh_token
+        - scope
+        - token_type
+      properties: 
+        access_token:
+          description: 'The access token. This is a JWT token that grants access to resources.'
+          type: string
+          nullable: true
+        expires_in:
+          description: 'The timestamp the token expires at (measured in number of seconds since 1/1/1970 UTC).'
+          type: integer
+          format: int64 
+        id_token:
+          description: 'The ID Token is a signed JWT token returned from the authorization server and contains the user’s profile information, including the domain of the identity provider. This domain is used to obtain the identity provider URL. This token is used for optimization so the application can know the identity of the user, without having to make any additional network requests. This token can be generated via the Authorization Code flow only.'
+          type: string 
+        refresh_token:
+          description: The value of the Refresh token. 
+          type: string
+          nullable: true
+        scope:
+          description: The scope of access needed for the token 
+          type: string
+          nullable: true
+        token_type:
+          description: The type of the token. 
+          type: string
+
+    GetApiTokenDetailsRequest:
+      type: object
+      properties:
+        tokenValue:
+          type: string
+          description: 'The value of the API token.'
+
+    GetAccessTokenByApiRefreshTokenRequest: 
+      type: object
+      properties:
+        api_token:
+          description: 'The value of the API token.'
+          type: string
+          nullable: true
+        passcode:
+          description: 'The multi-factor authentication passcode from the registered multi-factor authentication (MFA) device.'
+          type: string
+          nullable: true
+        refresh_token:
+          description: 'Deprecated, need to use api_token.'
+          type: string
+          nullable: true

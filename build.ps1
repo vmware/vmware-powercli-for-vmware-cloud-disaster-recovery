@@ -1,7 +1,34 @@
-﻿[CmdletBinding()]
+﻿#################################################################################
+# Copyright (C) 2022, VMware Inc
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#################################################################################
+[CmdletBinding()]
 Param(
     [Parameter(Mandatory = $false)] [string] $Version ,
-    [Parameter(Mandatory = $false)] [string] $NuGetApiKey
+    [Parameter(Mandatory = $false)] [string] $NuGetApiKey,
+    [Parameter(Mandatory = $false)] [string] $OpenApiFile ="vcdr.yaml"
 )
 #Set-StrictMode -Version 3
 $ErrorActionPreference = "Stop"
@@ -27,7 +54,7 @@ $VCDRSERVICE = "$VCDRSERVICE_BASEDIR\$VERSION"
 #NSWAG https://github.com/RicoSuter/NSwag has to be installed
 #region NSWAG
 $NSWAG_OUTPUTFILE = "/output:.\c#.netcode\VMware.VCDRService\Client.cs"
-$NSWAG_INPUTFILE = "/input:.\NSwag\vcdr.yaml"
+$NSWAG_INPUTFILE = "/input:.\NSwag\$OpenApiFile"
 
 $CLASSNAME = "/classname:VCDRServer"
 $NAMESPACE = "/namespace:VMware.VCDRService"
@@ -35,13 +62,32 @@ $INJECTHTTPCLIENT = "/injectHttpClient:true"
 $GENERATEBASEURLPROPERTY = "/generateBaseUrlProperty:false"
 $USEBASEURL = "/useBaseUrl:true"
 $GENERATESYNCMETHODS = "/generateSyncMethods:false"
-& nswag openapi2csclient $CLASSNAME $NAMESPACE $INJECTHTTPCLIENT $GENERATESYNCMETHODS $USEBASEURL $GENERATEBASEURLPROPERTY $NSWAG_INPUTFILE $NSWAG_OUTPUTFILE
-#endregion NSWAG
+$GENERATECLIENT = "/generateClientClasses:true"
+$GENERATEXCEPTIONCLASS = "/generateExceptionClasses:false"
+& nswag openapi2csclient $CLASSNAME $NAMESPACE $INJECTHTTPCLIENT $GENERATESYNCMETHODS $USEBASEURL $GENERATEBASEURLPROPERTY $GENERATECLIENT $GENERATEXCEPTIONCLASS $NSWAG_INPUTFILE $NSWAG_OUTPUTFILE
 
+$GENERATEBASEURLPROPERTY = "/generateBaseUrlProperty:true"
+$GENERATESYNCMETHODS = "/generateSyncMethods:true"
+$NSWAG_OUTPUTFILE = "/output:.\c#.netcode\VMware.VCDRService\CloudServicePlatform.cs"
+$NSWAG_INPUTFILE = "/input:.\NSwag\CloudServicePlatform.yaml"
+$CLASSNAME = "/classname:CloudServicePlatform" 
+& nswag openapi2csclient $CLASSNAME $NAMESPACE $INJECTHTTPCLIENT $GENERATESYNCMETHODS $USEBASEURL $GENERATEBASEURLPROPERTY $GENERATECLIENT $GENERATEXCEPTIONCLASS $NSWAG_INPUTFILE $NSWAG_OUTPUTFILE
+
+$GENERATEBASEURLPROPERTY = "/generateBaseUrlProperty:true"
+$GENERATESYNCMETHODS = "/generateSyncMethods:true"
+$NSWAG_OUTPUTFILE = "/output:.\c#.netcode\VMware.VCDRService\VcdrBackendPlatform.cs"
+$NSWAG_INPUTFILE = "/input:.\NSwag\VcdrBackendPlatform.yaml"
+$CLASSNAME = "/classname:VcdrBackendPlatform" 
+& nswag openapi2csclient $CLASSNAME $NAMESPACE $INJECTHTTPCLIENT $GENERATESYNCMETHODS $USEBASEURL $GENERATEBASEURLPROPERTY $GENERATECLIENT $GENERATEXCEPTIONCLASS $NSWAG_INPUTFILE $NSWAG_OUTPUTFILE
+
+
+
+#endregion NSWAG
 # start NET BUILD
 #region build
 Push-Location -Path $VCDRSERVICE_SRC
 & dotnet build
+
 & msbuild -t:Rebuild -p:Configuration=$CONFIGURATION -p:Platform=$PLATFORM
 Copy-Item -path ".\*.cs" -Destination "..\$VCDRSERVICELEGACY_DIRNAME" -Verbose
 Set-Location -Path ..\$VCDRSERVICELEGACY_DIRNAME
@@ -114,10 +160,10 @@ $TemplatePSD1=@"
   # NestedModules = @()
 
   # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-  FunctionsToExport    = @("Connect-VCDRServer", "Disconnect-VCDRServer", "Get-VCDRCloudFileSystem", "Get-VCDRProtectedSite", "Get-VCDRProtectionGroup", "Get-VCDRSnapshot", "Get-VCDRProtectedVm", "get-VCDRRecoverySddc")
+  # FunctionsToExport    = @()
 
   # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-  CmdletsToExport      = @("Connect-VCDRServer", "Disconnect-VCDRServer", "Get-VCDRCloudFileSystem", "Get-VCDRProtectedSite", "Get-VCDRProtectionGroup", "Get-VCDRSnapshot", "Get-VCDRProtectedVm", "get-VCDRRecoverySddc")
+  CmdletsToExport      = @("Connect-VCDRService","Disconnect-VCDRService","Get-VCDRInstance","Get-DefaultVCDRInstance","Set-DefaultVCDRInstance","Connect-VCDRServer", "Disconnect-VCDRServer", "Get-VCDRCloudFileSystem", "Get-VCDRProtectedSite", "Get-VCDRProtectionGroup", "Get-VCDRSnapshot", "Get-VCDRProtectedVm", "get-VCDRRecoverySddc")
 
   # Variables to export from this module
   VariablesToExport    = '*'

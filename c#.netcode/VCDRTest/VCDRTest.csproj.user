@@ -4,6 +4,6 @@
     <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup>
-    <ActiveDebugProfile>Org4</ActiveDebugProfile>
+    <ActiveDebugProfile>VCDR-PRD-DaCS by Org</ActiveDebugProfile>
   </PropertyGroup>
 </Project>

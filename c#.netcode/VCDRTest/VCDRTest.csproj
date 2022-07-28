@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
-    <StartupObject>VCDRTest.VCDRtest</StartupObject>
+    <StartupObject>VCDRTest.VcdrTest</StartupObject>
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
 

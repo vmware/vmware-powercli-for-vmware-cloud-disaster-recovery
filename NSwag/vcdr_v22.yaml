@@ -170,57 +170,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  '/cloud-file-systems/{cloud_file_system_id}/protected-vms-batch':
-    post:
-      summary: 'Get detailed information about the specified VMs. '
-      operationId: GetProtectedVirtualMachineBatchDetails
-      tags:
-        - protected_vm
-      x-vcdr-roles-config:
-        roles:
-          - DR_ADMIN
-          - DR_TESTER
-          - BACKUP_ADMIN
-          - SERVICE_ADMIN
-          - SDDC_ADMIN
-          - AUDITOR
-        mutatorMethod: false
-      parameters:
-        - name: cloud_file_system_id
-          description: The cloud file system containing the protection groups of interest.
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: vms
-          description: 'The VMs of interest. All results are returned in a single request, so the number of provided VMs should be bounded.'
-          required: true
-          in: query
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/VmId'
-      responses:
-        '200':
-          description: OK. The request succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetProtectedVirtualMachineBatchDetailsResponse'
-        '400':
-          description: Bad request. The server could not understand the request.
-        '401':
-          description: Unauthorized. The client has not authenticated.
-        '403':
-          description: Forbidden. The client is not authorized.
-        '404':
-          description: Not found. The server cannot find the specified resource.
-        '500':
-          description: VMware Cloud DR-specific error.<br> An error unique to VMware Cloud DR was encountered while attempting to satisfy the request. See the returned object for details on the error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   '/cloud-file-systems/{cloud_file_system_id}/protected-sites':
     get:
       summary: 'Get a list of all protected sites associated with an individual cloud file system. '
@@ -244,20 +193,20 @@ paths:
           schema:
             type: string
         - name: limit
-          description: 'The maximum number of results to return with the call. The maximum is 500, and the default is 50 results.'
+          description: 'The maximum number of results to return with the call. The maximum is 500, and the default is 50 results. <p><b>Note</b>&colon; The pre-release version of this API differs from this documentation. This parameter is ignored.'
           required: false
           in: query
           schema:
             type: integer
             format: int32
         - name: filter_spec
-          description: Used to filter the results.
+          description: Used to filter the results. <p><b>Note</b>&colon; The pre-release version of this API differs from this documentation. This parameter is ignored. All protected sites are returned.
           required: false
           in: query
           schema:
             $ref: '#/components/schemas/ProtectedSitesFilterSpec'
         - name: cursor
-          description: 'An opaque string previously returned by this API that can be passed to this API in order to get the next set of results. If this property is not passed, enumeration of starts from the beginning.'
+          description: 'An opaque string previously returned by this API that can be passed to this API in order to get the next set of results. If this property is not passed, enumeration of starts from the beginning. <p><b>Note</b>&colon; The pre-release version of this API differs from this documentation. This parameter is ignored. All protected sites are returned when making this API call.'
           required: false
           in: query
           schema:
@@ -429,57 +378,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProtectionGroupDetails'
-        '400':
-          description: Bad request. The server could not understand the request.
-        '401':
-          description: Unauthorized. The client has not authenticated.
-        '403':
-          description: Forbidden. The client is not authorized.
-        '404':
-          description: Not found. The server cannot find the specified resource.
-        '500':
-          description: VMware Cloud DR-specific error.<br> An error unique to VMware Cloud DR was encountered while attempting to satisfy the request. See the returned object for details on the error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  '/cloud-file-systems/{cloud_file_system_id}/protection-groups-batch':
-    post:
-      summary: 'Get details for one or more requested protection groups. '
-      operationId: GetProtectionGroupBatchDetails
-      tags:
-        - protection_group
-      x-vcdr-roles-config:
-        roles:
-          - DR_ADMIN
-          - DR_TESTER
-          - BACKUP_ADMIN
-          - SERVICE_ADMIN
-          - SDDC_ADMIN
-          - AUDITOR
-        mutatorMethod: false
-      parameters:
-        - name: cloud_file_system_id
-          description: The cloud file system containing the protection groups of interest.
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: protection_groups
-          description: 'The IDs of the protection groups of interest. All results are returned in a single request, so the number of provided protection groups should be bounded.'
-          required: true
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-      responses:
-        '200':
-          description: OK. The request succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetProtectionGroupBatchDetailsResponse'
         '400':
           description: Bad request. The server could not understand the request.
         '401':
@@ -717,6 +615,11 @@ components:
     CloudFileSystemDetails:
       description: Detailed information about an individual cloud file system.
       type: object
+      required:
+        - id
+        - name
+        - capacity_gib
+        - used_gib
       properties:
         id:
           description: Cloud file system unique identifier.
@@ -738,6 +641,9 @@ components:
     CloudFileSystemSummary:
       description: Summary information about an individual cloud file system.
       type: object
+      required:
+        - id
+        - name
       properties:
         id:
           description: Cloud file system unique identifier.
@@ -748,6 +654,8 @@ components:
     Error:
       description: 'A message describing an error with the API call. _not_yet_macro Upon error, the returned object may not correspond to this object. In some circumstance nothing is returned. For example, the HTTP response status code might be the only way to distinguish success from failure.'
       type: object
+      required:
+        - messages
       properties:
         messages:
           description: A stack or error messages. The first element (top of the stack) is the broadest description of the failure.
@@ -765,7 +673,7 @@ components:
             $ref: '#/components/schemas/CloudFileSystemSummary'
     GetProtectedSitesResponse:
       description: Response object encoding an array of summary information about protected sites and a continuation cursor.
-      type: object
+      type: object 
       properties:
         cursor:
           description: 'An opaque string that can be passed back to this API in order to get the next set of results.  If this poperty is not present, no more results are available.'
@@ -773,20 +681,12 @@ components:
         protected_sites:
           description: An array of summary information concerning protected sites.
           type: array
+          default: []
           items:
             $ref: '#/components/schemas/ProtectedSiteSummary'
-    GetProtectedVirtualMachineBatchDetailsResponse:
-      description: Response object encoding an array of detailed information about the specified protected VMs.
-      type: object
-      properties:
-        vm_details:
-          description: An array of objects describing the provided protected VMs
-          type: array
-          items:
-            $ref: '#/components/schemas/VmDetail'
     GetProtectedVirtualMachinesResponse:
       description: Response object encoding an array of summary information about protected VMs and a continuation cursor.
-      type: object
+      type: object 
       properties:
         cursor:
           description: 'An opaque string that can be passed back to this API in order to get the next set of results.  If this poperty is not present, no more results are available.'
@@ -794,17 +694,9 @@ components:
         vms:
           description: An array of summary information concerning protected VMs
           type: array
+          default: []
           items:
             $ref: '#/components/schemas/VmSummary'
-    GetProtectionGroupBatchDetailsResponse:
-      description: Protection group details for multiple protection groups.
-      type: object
-      properties:
-        protection_group_details:
-          description: The arary of protection group details.
-          type: array
-          items:
-            $ref: '#/components/schemas/ProtectionGroupDetails'
     GetProtectionGroupSnapshotsResponse:
       description: Response object encoding an array of summary information about protection group snapshots and a continuation cursor.
       type: object
@@ -819,7 +711,7 @@ components:
           type: string
     GetProtectionGroupsResponse:
       description: Response object encoding an array of summary information about protection groups and a continuation cursor.
-      type: object
+      type: object  
       properties:
         cursor:
           description: 'An opaque string that can be passed back to this API in order to get the next set of results.  If this poperty is not present, no more results are available.'
@@ -827,20 +719,25 @@ components:
         protection_groups:
           description: An array of summary information concerning protection groups.
           type: array
+          default: []
           items:
             $ref: '#/components/schemas/ProtectionGroupSummary'
     GetRecoverySddcResponse:
       description: Response object encoding an array of summary information about Recovery SDDCs.
-      type: object
+      type: object 
       properties:
         data:
-          description: Object encoding an array of summary information about Recovery SDDCs.
+          description: Response object encoding an array of summary information about Recovery SDDCs.
           type: array
+          default: []
           items:
             $ref: '#/components/schemas/RecoverySddcSummary'
     LocalizableMessage:
       description: An abstract representation of a message that allow the message to be displayed for multiple locales.
       type: object
+      required:
+        - id
+        - default_message
       properties:
         id:
           description: 'The identifier specifying the message from the localized message catalog.<p> <b>NOTE:</b> The localized message catalog is not available in this release of the API, so clients will need to determine the failure from the default_message.'
@@ -856,6 +753,10 @@ components:
     ProtectedSiteDetails:
       description: Detailed information about protected sites.
       type: object
+      required:
+        - id
+        - name
+        - type
       properties:
         id:
           description: The identifier of the protected site.
@@ -869,6 +770,9 @@ components:
     ProtectedSiteSummary:
       description: Summary information about protected sites.
       type: object
+      required:
+        - id
+        - name
       properties:
         id:
           description: The identifier of the protected site.
@@ -936,10 +840,6 @@ components:
         snapshot_quiescing_enabled:
           description: 'Indicates if quiescing is enabled for this protection group. For VMs with VMware Tools installed, you can create protection groups to take quiesced snapshots. Quiescing pauses or alters the state of running processes on the VM to guarantee a consistent state of applications.'
           type: boolean
-        snapshot_timestamp:
-          description: 'The time expressed as a Posix timestamp of the most recent snapshot. Posix time is the number of seconds since the epoch 1970-01-01 00:00:00 UTC. For example: the timestap 1640143163 corresponds to 2021-12-22 3:19:23 UTC.'
-          type: number
-          format: int64
         used_gib:
           description: The total amount of storage consumed by this protection group.
           type: number
@@ -960,6 +860,8 @@ components:
     ProtectionGroupMembersSpec:
       description: The specification used to define which VMs are contained in a protection group. A VM is included in the protection group if it matches any of the criteria listed below.
       type: object
+      required:
+        - vcenter_id
       properties:
         vcenter_id:
           description: ID of the vCenter on the protected site.
@@ -970,10 +872,10 @@ components:
           items:
             type: string
         vcenter_tags:
-          description: Specify VMs with <b>any</b> of these vCenter tags.
+          description: 'Specify VMs with <b>any</b> of these tags, provided as strings of the form "<tag>:<category>" (for example, "Production:Availability" and "Testing:Availability").<br>'
           type: array
           items:
-            $ref: '#/components/schemas/Tag'
+            type: string
         vcenter_folder_paths:
           description: 'Specify VMs that reside in <b>any</b> of the following folder paths on the specified protected site vCenter. Each path must be specified from the root, so each will begin with a datacenter name (e.g., "/Datacenter_name/Cluster_name/my_folder_1"). Note that only VMs directly in the provided folders are protected (for example, other VMs that are recursively reachable from the specified folder are not included).'
           type: array
@@ -996,6 +898,16 @@ components:
     ProtectionGroupSnapshotDetails:
       description: Detailed information about protection group snapshots.
       type: object
+
+        - id
+        - name
+        - creation_timestamp
+        - expiration_timestamp
+        - trigger_type
+        - vm_count
+        - failed_vm_snap_count
+        - unique_used_data_gib
+        - total_used_data_gib
       properties:
         id:
           description: The unique identifier of the protection group snapshot.
@@ -1044,6 +956,9 @@ components:
     ProtectionGroupSnapshotSummary:
       description: Summary information about protection group snapshots.
       type: object
+      required:
+        - id
+        - name
       properties:
         id:
           description: The unique identifier of the protection group snapshot.
@@ -1054,6 +969,9 @@ components:
     ProtectionGroupSummary:
       description: Summary information for protection group.
       type: object
+      required:
+        - id
+        - name
       properties:
         id:
           description: The unique identifier of the protection group.
@@ -1071,13 +989,18 @@ components:
           items:
             type: string
         vcenter_ids:
-          description: Restrict results to protection groups associated with <b>any</b> of these vCenters. Provide vCenter instanceUuids here.
+          description: 'Restrict results to protection groups associated with <b>any</b> of these vCenters. Provide vCenter instanceUuids here. <p><b>Note</b>&colon; The pre-release version of this API differs from this documentation. This API currently uses the vCenter IP address, not the vCenter instance UUID.'
           type: array
           items:
             type: string
     RecoverySddcDetails:
       description: Detailed information about Recovery SDDCs.
       type: object
+      required:
+        - id
+        - name
+        - region
+        - availability_zone
       properties:
         id:
           description: The identifier of the Recovery SDDC.
@@ -1096,6 +1019,9 @@ components:
     RecoverySddcSummary:
       description: Summary information about the Recovery SDDC.
       type: object
+      required:
+        - id
+        - name
       properties:
         id:
           description: The unique identifier of the Recovery SDDC.
@@ -1158,55 +1084,13 @@ components:
         - SNAPSHOT_TRIGGER_TYPE_UNKNOWN
         - SNAPSHOT_TRIGGER_TYPE_MANUAL
         - SNAPSHOT_TRIGGER_TYPE_SCHEDULED
-    Tag:
-      description: A vCenter category/tag pair.
-      type: object
-      properties:
-        category_name:
-          description: The category name.
-          type: string
-        tag_name:
-          description: The tag name.
-          type: string
-    VmDetail:
-      description: Detailed information for protected VM.
-      type: object
-      properties:
-        vm_id:
-          description: The identifier of the protected VM.
-          $ref: '#/components/schemas/VmId'
-        vcdr_vm_id:
-          description: 'The identifier of the protected VM assigned by VCDR. This is never the same as the instanceUuid assigned by vCenter. The VCDR-assigned VM ID is guaranteed to be unique, while the vCenter-assigned ID is not.'
-          type: string
-        name:
-          description: The name of the protected VM.
-          type: string
-        protection_groups:
-          description: The protection groups that protect this VM.
-          type: array
-          items:
-            $ref: '#/components/schemas/ProtectionGroupSummary'
-        size:
-          description: Combined logical sizes of all virtual disks in GiBs.
-          type: number
-          format: double
-    VmId:
-      description: Unique identifier for a protected VM.
-      type: object
-      properties:
-        vcenter_id:
-          description: The instance UUID of the vCenter managing the VM.
-          type: string
-        id:
-          description: The vCenter-assigned instance UUID for the VM.
-          type: string
     VmSummary:
-      description: Summary information for protected VM.
+      description: Summary information for protected VMs.
       type: object
       properties:
         id:
-          description: The identifier of the protected VM.
-          $ref: '#/components/schemas/VmId'
+          description: 'The unique identifier of the protected VM, which is a vCenter-assigned instanceUuid.'
+          type: string
         vcdr_vm_id:
           description: 'The identifier of the protected VM assigned by VCDR. This is never the same as the instanceUuid assigned by vCenter. The VCDR-assigned VM ID is guaranteed to be unique, while the vCenter-assigned ID is not.'
           type: string
@@ -1237,7 +1121,7 @@ components:
           items:
             type: string
         protection_group_ids:
-          description: Restrict results to protected VMs included in <b>any</b> of these protection groups.
+          description: Restrict results to protected VMs included in <b>any</b> of these protection groups
           type: array
           items:
             type: string

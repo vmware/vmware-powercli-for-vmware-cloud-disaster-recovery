@@ -418,12 +418,140 @@ namespace VMware.VCDRService
         }
 
         /// <summary>
+        /// Get detailed information about the specified VMs.
+        /// </summary>
+        /// <param name="cloud_file_system_id">The cloud file system containing the protection groups of interest.</param>
+        /// <param name="vms">The VMs of interest. All results are returned in a single request, so the number of provided VMs should be bounded.</param>
+        /// <returns>OK. The request succeeded.</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<GetProtectedVirtualMachineBatchDetailsResponse> GetProtectedVirtualMachineBatchDetailsAsync(string cloud_file_system_id, System.Collections.Generic.IEnumerable<VmId> vms)
+        {
+            return GetProtectedVirtualMachineBatchDetailsAsync(cloud_file_system_id, vms, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Get detailed information about the specified VMs.
+        /// </summary>
+        /// <param name="cloud_file_system_id">The cloud file system containing the protection groups of interest.</param>
+        /// <param name="vms">The VMs of interest. All results are returned in a single request, so the number of provided VMs should be bounded.</param>
+        /// <returns>OK. The request succeeded.</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<GetProtectedVirtualMachineBatchDetailsResponse> GetProtectedVirtualMachineBatchDetailsAsync(string cloud_file_system_id, System.Collections.Generic.IEnumerable<VmId> vms, System.Threading.CancellationToken cancellationToken)
+        {
+            if (cloud_file_system_id == null)
+                throw new System.ArgumentNullException("cloud_file_system_id");
+
+            if (vms == null)
+                throw new System.ArgumentNullException("vms");
+
+            var urlBuilder_ = new System.Text.StringBuilder();
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/cloud-file-systems/{cloud_file_system_id}/protected-vms-batch?");
+            urlBuilder_.Replace("{cloud_file_system_id}", System.Uri.EscapeDataString(ConvertToString(cloud_file_system_id, System.Globalization.CultureInfo.InvariantCulture)));
+            foreach (var item_ in vms) { urlBuilder_.Append(System.Uri.EscapeDataString("vms") + "=").Append(System.Uri.EscapeDataString(ConvertToString(item_, System.Globalization.CultureInfo.InvariantCulture))).Append("&"); }
+            urlBuilder_.Length--;
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<GetProtectedVirtualMachineBatchDetailsResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 400)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("Bad request. The server could not understand the request.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 401)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("Unauthorized. The client has not authenticated.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 403)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("Forbidden. The client is not authorized.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 404)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("Not found. The server cannot find the specified resource.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 500)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<Error>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new ApiException<Error>("VMware Cloud DR-specific error.<br> An error unique to VMware Cloud DR was encountered while attempting to satisfy the request. See the returned object for details on the error.", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Get a list of all protected sites associated with an individual cloud file system.
         /// </summary>
         /// <param name="cloud_file_system_id">Unique identifier of an individual cloud file system. Use the cloud file system ID of the cloud file system for which you want to get a list of all protected sites.</param>
-        /// <param name="limit">The maximum number of results to return with the call. The maximum is 500, and the default is 50 results. &lt;p&gt;&lt;b&gt;Note&lt;/b&gt;&amp;colon; The pre-release version of this API differs from this documentation. This parameter is ignored.</param>
-        /// <param name="filter_spec">Used to filter the results. &lt;p&gt;&lt;b&gt;Note&lt;/b&gt;&amp;colon; The pre-release version of this API differs from this documentation. This parameter is ignored. All protected sites are returned.</param>
-        /// <param name="cursor">An opaque string previously returned by this API that can be passed to this API in order to get the next set of results. If this property is not passed, enumeration of starts from the beginning. &lt;p&gt;&lt;b&gt;Note&lt;/b&gt;&amp;colon; The pre-release version of this API differs from this documentation. This parameter is ignored. All protected sites are returned when making this API call.</param>
+        /// <param name="limit">The maximum number of results to return with the call. The maximum is 500, and the default is 50 results.</param>
+        /// <param name="filter_spec">Used to filter the results.</param>
+        /// <param name="cursor">An opaque string previously returned by this API that can be passed to this API in order to get the next set of results. If this property is not passed, enumeration of starts from the beginning.</param>
         /// <returns>OK. The request succeeded.</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<GetProtectedSitesResponse> GetProtectedSitesAsync(string cloud_file_system_id, int? limit, ProtectedSitesFilterSpec filter_spec, string cursor)
@@ -436,9 +564,9 @@ namespace VMware.VCDRService
         /// Get a list of all protected sites associated with an individual cloud file system.
         /// </summary>
         /// <param name="cloud_file_system_id">Unique identifier of an individual cloud file system. Use the cloud file system ID of the cloud file system for which you want to get a list of all protected sites.</param>
-        /// <param name="limit">The maximum number of results to return with the call. The maximum is 500, and the default is 50 results. &lt;p&gt;&lt;b&gt;Note&lt;/b&gt;&amp;colon; The pre-release version of this API differs from this documentation. This parameter is ignored.</param>
-        /// <param name="filter_spec">Used to filter the results. &lt;p&gt;&lt;b&gt;Note&lt;/b&gt;&amp;colon; The pre-release version of this API differs from this documentation. This parameter is ignored. All protected sites are returned.</param>
-        /// <param name="cursor">An opaque string previously returned by this API that can be passed to this API in order to get the next set of results. If this property is not passed, enumeration of starts from the beginning. &lt;p&gt;&lt;b&gt;Note&lt;/b&gt;&amp;colon; The pre-release version of this API differs from this documentation. This parameter is ignored. All protected sites are returned when making this API call.</param>
+        /// <param name="limit">The maximum number of results to return with the call. The maximum is 500, and the default is 50 results.</param>
+        /// <param name="filter_spec">Used to filter the results.</param>
+        /// <param name="cursor">An opaque string previously returned by this API that can be passed to this API in order to get the next set of results. If this property is not passed, enumeration of starts from the beginning.</param>
         /// <returns>OK. The request succeeded.</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<GetProtectedSitesResponse> GetProtectedSitesAsync(string cloud_file_system_id, int? limit, ProtectedSitesFilterSpec filter_spec, string cursor, System.Threading.CancellationToken cancellationToken)
@@ -887,6 +1015,134 @@ namespace VMware.VCDRService
                         if (status_ == 200)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<ProtectionGroupDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 400)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("Bad request. The server could not understand the request.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 401)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("Unauthorized. The client has not authenticated.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 403)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("Forbidden. The client is not authorized.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 404)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("Not found. The server cannot find the specified resource.", status_, responseText_, headers_, null);
+                        }
+                        else
+                        if (status_ == 500)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<Error>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new ApiException<Error>("VMware Cloud DR-specific error.<br> An error unique to VMware Cloud DR was encountered while attempting to satisfy the request. See the returned object for details on the error.", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Get details for one or more requested protection groups.
+        /// </summary>
+        /// <param name="cloud_file_system_id">The cloud file system containing the protection groups of interest.</param>
+        /// <param name="protection_groups">The IDs of the protection groups of interest. All results are returned in a single request, so the number of provided protection groups should be bounded.</param>
+        /// <returns>OK. The request succeeded.</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<GetProtectionGroupBatchDetailsResponse> GetProtectionGroupBatchDetailsAsync(string cloud_file_system_id, System.Collections.Generic.IEnumerable<string> protection_groups)
+        {
+            return GetProtectionGroupBatchDetailsAsync(cloud_file_system_id, protection_groups, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Get details for one or more requested protection groups.
+        /// </summary>
+        /// <param name="cloud_file_system_id">The cloud file system containing the protection groups of interest.</param>
+        /// <param name="protection_groups">The IDs of the protection groups of interest. All results are returned in a single request, so the number of provided protection groups should be bounded.</param>
+        /// <returns>OK. The request succeeded.</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<GetProtectionGroupBatchDetailsResponse> GetProtectionGroupBatchDetailsAsync(string cloud_file_system_id, System.Collections.Generic.IEnumerable<string> protection_groups, System.Threading.CancellationToken cancellationToken)
+        {
+            if (cloud_file_system_id == null)
+                throw new System.ArgumentNullException("cloud_file_system_id");
+
+            if (protection_groups == null)
+                throw new System.ArgumentNullException("protection_groups");
+
+            var urlBuilder_ = new System.Text.StringBuilder();
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/cloud-file-systems/{cloud_file_system_id}/protection-groups-batch?");
+            urlBuilder_.Replace("{cloud_file_system_id}", System.Uri.EscapeDataString(ConvertToString(cloud_file_system_id, System.Globalization.CultureInfo.InvariantCulture)));
+            foreach (var item_ in protection_groups) { urlBuilder_.Append(System.Uri.EscapeDataString("protection_groups") + "=").Append(System.Uri.EscapeDataString(ConvertToString(item_, System.Globalization.CultureInfo.InvariantCulture))).Append("&"); }
+            urlBuilder_.Length--;
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<GetProtectionGroupBatchDetailsResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1564,27 +1820,25 @@ namespace VMware.VCDRService
         /// <summary>
         /// Cloud file system unique identifier.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// The cloud file system name.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }
 
         /// <summary>
         /// The total physical storage capacity in gibibytes (GiB) of the individual cloud file system. The actual volume of data the cloud file system can contain is likely larger than this value.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("capacity_gib", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("capacity_gib", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public double Capacity_gib { get; set; }
 
         /// <summary>
         /// The total amount of used storage capacity in GiB of an individual cloud file system. The actual volume of used storage for the cloud file system is likely larger than this value.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("used_gib", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("used_gib", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public double Used_gib { get; set; }
 
         /// <summary>
@@ -1613,15 +1867,13 @@ namespace VMware.VCDRService
         /// <summary>
         /// Cloud file system unique identifier.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// Name of the cloud file system.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
@@ -1644,9 +1896,8 @@ namespace VMware.VCDRService
         /// <summary>
         /// A stack or error messages. The first element (top of the stack) is the broadest description of the failure.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("messages", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.ICollection<LocalizableMessage> Messages { get; set; } = new System.Collections.ObjectModel.Collection<LocalizableMessage>();
+        [Newtonsoft.Json.JsonProperty("messages", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.ICollection<LocalizableMessage> Messages { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
 
@@ -1712,6 +1963,29 @@ namespace VMware.VCDRService
     }
 
     /// <summary>
+    /// Response object encoding an array of detailed information about the specified protected VMs.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
+    public partial class GetProtectedVirtualMachineBatchDetailsResponse
+    {
+        /// <summary>
+        /// An array of objects describing the provided protected VMs
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("vm_details", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.ICollection<VmDetail> Vm_details { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
+
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties; }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
     /// Response object encoding an array of summary information about protected VMs and a continuation cursor.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
@@ -1728,6 +2002,29 @@ namespace VMware.VCDRService
         /// </summary>
         [Newtonsoft.Json.JsonProperty("vms", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.ICollection<VmSummary> Vms { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
+
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties; }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Protection group details for multiple protection groups.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
+    public partial class GetProtectionGroupBatchDetailsResponse
+    {
+        /// <summary>
+        /// The arary of protection group details.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("protection_group_details", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.ICollection<ProtectionGroupDetails> Protection_group_details { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
 
@@ -1805,7 +2102,7 @@ namespace VMware.VCDRService
     public partial class GetRecoverySddcResponse
     {
         /// <summary>
-        /// Response object encoding an array of summary information about Recovery SDDCs.
+        /// Object encoding an array of summary information about Recovery SDDCs.
         /// </summary>
         [Newtonsoft.Json.JsonProperty("data", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.ICollection<RecoverySddcSummary> Data { get; set; }
@@ -1830,15 +2127,13 @@ namespace VMware.VCDRService
         /// <summary>
         /// The identifier specifying the message from the localized message catalog.&lt;p&gt; &lt;b&gt;NOTE:&lt;/b&gt; The localized message catalog is not available in this release of the API, so clients will need to determine the failure from the default_message.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// The message in English.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("default_message", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("default_message", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Default_message { get; set; }
 
         /// <summary>
@@ -1867,22 +2162,19 @@ namespace VMware.VCDRService
         /// <summary>
         /// The identifier of the protected site.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// Name of the protected site.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }
 
         /// <summary>
         /// The type of the protected site.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public ProtectedSiteType Type { get; set; }
 
@@ -1906,15 +2198,13 @@ namespace VMware.VCDRService
         /// <summary>
         /// The identifier of the protected site.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// Name of the protected site.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
@@ -2038,6 +2328,12 @@ namespace VMware.VCDRService
         public bool Snapshot_quiescing_enabled { get; set; }
 
         /// <summary>
+        /// The time expressed as a Posix timestamp of the most recent snapshot. Posix time is the number of seconds since the epoch 1970-01-01 00:00:00 UTC. For example: the timestap 1640143163 corresponds to 2021-12-22 3:19:23 UTC.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("snapshot_timestamp", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public double Snapshot_timestamp { get; set; }
+
+        /// <summary>
         /// The total amount of storage consumed by this protection group.
         /// </summary>
         [Newtonsoft.Json.JsonProperty("used_gib", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
@@ -2084,8 +2380,7 @@ namespace VMware.VCDRService
         /// <summary>
         /// ID of the vCenter on the protected site.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("vcenter_id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("vcenter_id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Vcenter_id { get; set; }
 
         /// <summary>
@@ -2095,10 +2390,10 @@ namespace VMware.VCDRService
         public System.Collections.Generic.ICollection<string> Vcenter_vm_name_patterns { get; set; }
 
         /// <summary>
-        /// Specify VMs with &lt;b&gt;any&lt;/b&gt; of these tags, provided as strings of the form "&lt;tag&gt;:&lt;category&gt;" (for example, "Production:Availability" and "Testing:Availability").&lt;br&gt;
+        /// Specify VMs with &lt;b&gt;any&lt;/b&gt; of these vCenter tags.
         /// </summary>
         [Newtonsoft.Json.JsonProperty("vcenter_tags", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.ICollection<string> Vcenter_tags { get; set; }
+        public System.Collections.Generic.ICollection<Tag> Vcenter_tags { get; set; }
 
         /// <summary>
         /// Specify VMs that reside in &lt;b&gt;any&lt;/b&gt; of the following folder paths on the specified protected site vCenter. Each path must be specified from the root, so each will begin with a datacenter name (e.g., "/Datacenter_name/Cluster_name/my_folder_1"). Note that only VMs directly in the provided folders are protected (for example, other VMs that are recursively reachable from the specified folder are not included).
@@ -2251,15 +2546,13 @@ namespace VMware.VCDRService
         /// <summary>
         /// The unique identifier of the protection group snapshot.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// The name of the protection group snapshot.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
@@ -2282,15 +2575,13 @@ namespace VMware.VCDRService
         /// <summary>
         /// The unique identifier of the protection group.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// The name of the protection group.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
@@ -2317,7 +2608,7 @@ namespace VMware.VCDRService
         public System.Collections.Generic.ICollection<string> Site_ids { get; set; }
 
         /// <summary>
-        /// Restrict results to protection groups associated with &lt;b&gt;any&lt;/b&gt; of these vCenters. Provide vCenter instanceUuids here. &lt;p&gt;&lt;b&gt;Note&lt;/b&gt;&amp;colon; The pre-release version of this API differs from this documentation. This API currently uses the vCenter IP address, not the vCenter instance UUID.
+        /// Restrict results to protection groups associated with &lt;b&gt;any&lt;/b&gt; of these vCenters. Provide vCenter instanceUuids here.
         /// </summary>
         [Newtonsoft.Json.JsonProperty("vcenter_ids", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.ICollection<string> Vcenter_ids { get; set; }
@@ -2342,22 +2633,19 @@ namespace VMware.VCDRService
         /// <summary>
         /// The identifier of the Recovery SDDC.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// The name of the Recovery SDDC.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }
 
         /// <summary>
         /// The region containing the Recovery SDDC.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("region", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("region", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Region { get; set; }
 
         /// <summary>
@@ -2386,15 +2674,13 @@ namespace VMware.VCDRService
         /// <summary>
         /// The unique identifier of the Recovery SDDC.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Id { get; set; }
 
         /// <summary>
         /// The name of the recovery SDDC.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
@@ -2504,16 +2790,121 @@ namespace VMware.VCDRService
     }
 
     /// <summary>
-    /// Summary information for protected VMs.
+    /// A vCenter category/tag pair.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
+    public partial class Tag
+    {
+        /// <summary>
+        /// The category name.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("category_name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Category_name { get; set; }
+
+        /// <summary>
+        /// The tag name.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("tag_name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Tag_name { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
+
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties; }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Detailed information for protected VM.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
+    public partial class VmDetail
+    {
+        /// <summary>
+        /// The identifier of the protected VM.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("vm_id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public VmId Vm_id { get; set; }
+
+        /// <summary>
+        /// The identifier of the protected VM assigned by VCDR. This is never the same as the instanceUuid assigned by vCenter. The VCDR-assigned VM ID is guaranteed to be unique, while the vCenter-assigned ID is not.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("vcdr_vm_id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Vcdr_vm_id { get; set; }
+
+        /// <summary>
+        /// The name of the protected VM.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The protection groups that protect this VM.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("protection_groups", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.ICollection<ProtectionGroupSummary> Protection_groups { get; set; }
+
+        /// <summary>
+        /// Combined logical sizes of all virtual disks in GiBs.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("size", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public double Size { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
+
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties; }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Unique identifier for a protected VM.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
+    public partial class VmId
+    {
+        /// <summary>
+        /// The instance UUID of the vCenter managing the VM.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("vcenter_id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Vcenter_id { get; set; }
+
+        /// <summary>
+        /// The vCenter-assigned instance UUID for the VM.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Id { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties = new System.Collections.Generic.Dictionary<string, object>();
+
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties; }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Summary information for protected VM.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
     public partial class VmSummary
     {
         /// <summary>
-        /// The unique identifier of the protected VM, which is a vCenter-assigned instanceUuid.
+        /// The identifier of the protected VM.
         /// </summary>
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Id { get; set; }
+        public VmId Id { get; set; }
 
         /// <summary>
         /// The identifier of the protected VM assigned by VCDR. This is never the same as the instanceUuid assigned by vCenter. The VCDR-assigned VM ID is guaranteed to be unique, while the vCenter-assigned ID is not.
@@ -2569,7 +2960,7 @@ namespace VMware.VCDRService
         public System.Collections.Generic.ICollection<string> Site_ids { get; set; }
 
         /// <summary>
-        /// Restrict results to protected VMs included in &lt;b&gt;any&lt;/b&gt; of these protection groups
+        /// Restrict results to protected VMs included in &lt;b&gt;any&lt;/b&gt; of these protection groups.
         /// </summary>
         [Newtonsoft.Json.JsonProperty("protection_group_ids", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.ICollection<string> Protection_group_ids { get; set; }
@@ -2585,42 +2976,6 @@ namespace VMware.VCDRService
 
     }
 
-
-
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
-    public partial class ApiException : System.Exception
-    {
-        public int StatusCode { get; private set; }
-
-        public string Response { get; private set; }
-
-        public System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> Headers { get; private set; }
-
-        public ApiException(string message, int statusCode, string response, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.Exception innerException)
-            : base(message + "\n\nStatus: " + statusCode + "\nResponse: \n" + ((response == null) ? "(null)" : response.Substring(0, response.Length >= 512 ? 512 : response.Length)), innerException)
-        {
-            StatusCode = statusCode;
-            Response = response;
-            Headers = headers;
-        }
-
-        public override string ToString()
-        {
-            return string.Format("HTTP Response: \n\n{0}\n\n{1}", Response, base.ToString());
-        }
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
-    public partial class ApiException<TResult> : ApiException
-    {
-        public TResult Result { get; private set; }
-
-        public ApiException(string message, int statusCode, string response, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, TResult result, System.Exception innerException)
-            : base(message, statusCode, response, headers, innerException)
-        {
-            Result = result;
-        }
-    }
 
 }
 

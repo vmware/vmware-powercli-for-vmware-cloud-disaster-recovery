@@ -1,3 +1,30 @@
+#################################################################################
+# Copyright (C) 2022, VMware Inc
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#################################################################################
+
 <#
         .SYNOPSIS
             Simple VCDR PowerShell script
@@ -26,60 +53,56 @@
     #>
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $true)][string] $token ,
-    [Parameter(Mandatory = $true)] [string] $server
+    [Parameter(Mandatory = $true)][string] $token 
 )
 Set-StrictMode -Version 3
 $ErrorActionPreference = "Stop"
 
-$VCDR = Connect-VCDRServer  -server $server -token $token
-Write-Output "Connected to $server"
-$VCDR | Format-Table
+Connect-VCDRService -Token   $token
+Get-VCDRInstance
 
 $RecoverySDDC = Get-VCDRRecoverySDDC
 if ($RecoverySDDC) {
-    Write-Output "Recovery SDDCs:" -NoNewline
+    Write-Host "Recovery SDDCs:" -NoNewline
     $RecoverySDDC | Format-Table
-}
-else {
-    Write-Output "No Recovery SDDCs configured"
+} else {
+    Write-Host "No Recovery SDDCs configured"
 }
 $cloudFileSystems = Get-VCDRCloudFileSystem
 if ($cloudFileSystems) {
     foreach ($cloudFileSystem in $cloudFileSystems) {
-        Write-Output "Cloud FileSystem: $($cloudFileSystem.Name)" -NoNewline
+        Write-Host "Cloud FileSystem: $($cloudFileSystem.Name)" 
         $cloudFileSystem | Format-Table
-        Write-Output "Protected Sites:" -NoNewline
+        Write-Host "Protected Sites:" -NoNewline
         $ProtectedSites = Get-VCDRProtectedSite -CloudFileSystem $cloudFileSystem
         $ProtectedSites | Format-Table
 
         $ProtectionGroups = Get-VCDRProtectionGroup  -CloudFileSystem $cloudFileSystem
         if ($ProtectionGroups) {
-            Write-Output "Protection Groups:" -NoNewline
+            Write-Host "Protection Groups:" -NoNewline
             $ProtectionGroups | Format-Table -RepeatHeader
             $Snapshots = Get-VCDRSnapshot   -ProtectionGroups $ProtectionGroups
             if ($Snapshots) {
-                Write-Output "Snapshots:" -NoNewline
+                Write-Host "Snapshots:" -NoNewline
                 $Snapshots | Format-Table -RepeatHeader
             }
             else {
-                Write-Output "No Snapshots"
+                Write-Host "No Snapshots"
             }
         }
         else {
-            Write-Output "No Protection Groups"
+            Write-Host "No Protection Groups"
         }
         $Vms = Get-VCDRProtectedVm -CloudFileSystem $cloudFileSystem
         if ($Vms){
-            Write-Output "Virtual Machines:" -NoNewline
+            Write-Host "Virtual Machines:" -NoNewline
             $Snapshots | Format-Table -RepeatHeader
         }
         else {
-            Write-Output "No Virtual Machines on this Cloud File System"
+            Write-Host "No Virtual Machines on this Cloud File System"
         }
 
-        Write-Output "`n********************`n"
+        Write-Host "`n********************`n"
     }
 }
-
-Disconnect-VCDRServer
+Disconnect-VCDRService

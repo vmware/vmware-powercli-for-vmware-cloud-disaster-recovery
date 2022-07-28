@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  description: VCDR Backend Public APIs.
+  version: '1.1' 
+  title: VCDR Backend Public APIs
+  contact:
+    name: VMware
+  license:
+    name: Copyright (c) 2021 VMware, Inc. All rights reserved.
+  x-vmw-vapi-codegenconfig:
+    package-name: com.vmware.vcdr
+    tag-resources-by-url-path: true
+ 
+security:
+  - api_key: []  
+
+servers:
+  - description: VCDR production backend
+    url: 'https://vcdrsp-prd-vcdr-backend-res01-prd-us-west-2.vdp.vmware.com/api/vcdr' 
+schemes:
+  - https
+tags:
+  - name: vcdr-org
+    description: 'CSP Org related APIs (Query VCDR tenant orgs, Service Instances etc.,)'
+paths:
+  /org/{org-id}/deployments:
+    get:
+      tags:
+        - vcdr-org
+      summary: Get all Deployments in given org
+      description: Get all Deployments in given org
+      operationId: getDeployments
+      parameters:
+        - name: org-id
+          in: path
+          description: ORG identifier
+          required: true
+          example: 55f1a417-1c88-4bc0-aa38-5edb7ab6b47a
+          schema:
+            type: string  
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TenantDeployment'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+          
+  
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      description: 'In order to make VMware Cloud Disaster Recovery REST API calls, you need to authenticate with the Cloud Services Platform, which will exchange an API token for an access token. This access token must be provided in the header for al VCDR REST API calls.<p>'
+      in: header
+      name: csp-auth-token
+      
+  parameters:
+    orgIdPathParam:
+      name: org-id
+      in: path
+      description: organization identifier
+      required: true
+      schema:
+        type: string
+        format: uuid
+      
+  schemas:
+    TenantOrchestratorConfig:
+      title: >-
+        Deployment configuration for VCDR orchestrator (Control Shift / IRR)
+        exposed to Tenants.
+      type: object
+      properties:
+        ip:
+          type: string
+          description: VCDR gateway IP.
+          example: 72.34.122.1
+        url:
+          type: string
+          description: VCDR gateway URL.
+          example: https://foobar-1234.vcdr.vmware.com
+    TenantCloudProviderConfig:
+      title: Cloud Provider config in Deployment exposed to Tenants
+      type: object
+      required:
+        - provider
+        - region
+      properties:
+        provider:
+          $ref: '#/components/schemas/CloudProvidersEnum'
+        region:
+          type: string
+          nullable: true
+          description: Cloud Provider Region ID in which deployment was requested
+          example: us-west-2
+    TenantDeploymentConfig:
+      title: Deployment configurations exposed to Tenant
+      type: object
+      properties:
+        subscription_info:
+          $ref: '#/components/schemas/SubscriptionConfig'
+        cloud_provider:
+          $ref: '#/components/schemas/TenantCloudProviderConfig'
+        orchestrator:
+          $ref: '#/components/schemas/TenantOrchestratorConfig'
+    TenantDeploymentSpec:
+      title: Deployment specification in Tenant org
+      type: object
+      required:
+        - type
+        - provider
+        - region
+      properties:
+        name:
+          type: string
+          description: Name of deployment
+          maxLength: 127
+          example: VCDR (us-west-2)
+        type:
+          $ref: '#/components/schemas/DeploymentTypesEnum'
+        provider:
+          $ref: '#/components/schemas/CloudProvidersEnum'
+        region:
+          type: string
+          nullable: true
+          description: Cloud Provider Region ID
+          example: us-west-2
+        seller:
+          $ref: '#/components/schemas/SellerOfRecordEnum'
+  
+    DeploymentTypesEnum:
+      title: Deployment Types
+      type: string
+      enum:
+        - VCDR
+      example: VCDR
+    CloudProvidersEnum:
+      title: Cloud Provider Types
+      type: string
+      enum:
+        - AWS
+        - MOCK
+      example: AWS
+    SellerOfRecordEnum:
+      title: Seller Of Records
+      type: string
+      enum:
+        - VMWARE
+        - AWS
+        - INACTIVE_SELLER
+      example: VMWARE
+    SubscriptionConfig:
+      title: Subscription config in Deployment
+      type: object
+      properties:
+        paid_pilot:
+          type: boolean
+          nullable: true
+          description: Whether Paid pilot was activated during deployment
+          example: false
+        term_subscription:
+          type: boolean
+          nullable: true
+          description: Whether TERM subscription is activated in given geo
+          example: false
+    DeploymentStatesEnum:
+      title: Deployment States
+      type: string
+      enum:
+        - IN_PROGRESS
+        - READY
+        - FAILED
+        - DELETION_REQUESTED
+        - DELETING
+        - DELETION_WAITING_APPROVAL
+        - DELETION_FAILED
+        - DELETED
+      example: IN_PROGRESS
+    TenantDeployment:
+      title: Deployment info exposed to Tenant orgs
+      type: object
+      required:
+        - id
+        - type
+        - state
+        - spec
+        - start_time
+        - created_by
+        - org_id
+      properties: # TODO Add TenantDeploymentSpec after changing schema
+        id:
+          type: string
+          format: uuid
+          description: Deployment ID
+          example: b25fa423-1800-4ffb-b7cf-0ea4d0bd75b2
+        type:
+          $ref: '#/components/schemas/DeploymentTypesEnum'
+        state:
+          $ref: '#/components/schemas/DeploymentStatesEnum'
+        spec:
+          $ref: '#/components/schemas/TenantDeploymentSpec'
+        start_time:
+          description: Time at which Deployment started
+          type: string
+          format: 'date-time'
+          example: "2021-11-02T23:20:15Z"
+        end_time:
+          description: Time at which Deployment completed
+          type: string
+          format: 'date-time'
+          example: "2021-11-02T23:23:12Z"
+          nullable: true
+        deletion_requested_time:
+          description: Time at which deployment deletion is requested.
+          type: string
+          format: 'date-time'
+          example: "2021-11-03T23:23:12Z"
+          nullable: true
+        config:
+          $ref: '#/components/schemas/TenantDeploymentConfig'
+        created_by:
+          type: string
+          description: User who created the deployment.
+          example: "user1@acme.com"
+        deletion_requested_by:
+          type: string
+          description: User who requested to delete deployment.
+          example: "user2@acme.com"
+          nullable: true
+        org_id:
+          type: string
+          description: Org id
+          example: 1a2ef44d-ccb6-408d-bbbe-8e374a17afc1
