@@ -32,14 +32,17 @@ First steps
 2. Open PowerShell Core (pwsh) or Windows PowerShell (powershell.exe)
 3. Change the active directory to **\vcdr-powershell-cmdlet**
 4. run **.\install.ps1 -Install CurrentUser**   
-5. **Connect-VCDRServer**  **-server** "vcdr-x-y-z-y.app.vcdr.vmware.com" **-token** "your VMC token" 
+5. **Connect-VCDRService**  **-token** "your VMC token" 
 
 **Get-Help** is available for each cmdlet
  
 <details><summary>  CmdLets  </summary>
 
-- Connect-VCDRServer 
-- Disconnect-VCDRServer
+- Connect-VCDRService
+- Disconnect-VCDRService
+- Get-VCDRInstance
+- Set-DefaultVCDRInstance
+- Get-DefaultVCDRInstance
 - Get-VCDRCloudFileSystem
 - Get-VCDRProtectedSite
 - Get-VCDRProtectionGroup
@@ -54,23 +57,21 @@ An introduction to the VCDR PowerShell CmdLets is available here https://vmc.tec
 
 _Script-1_
 ```
-$token=_"your VMC token"
-$server = "vcdr-aaa-bbb-ccc-ddd.app.vcdr.vmware.com"
-$VCDR=Connect-VCDRServer  -server $server -token $token
+$token=_"your VMC token" 
+Connect-VCDRService  -token $token
 $RecoverySDDC=Get-VCDRRecoverySDDC 
-$cloudFileSystem=Get-VCDRCloudFileSystem -name "cloud-backup-1"
+$cloudFileSystem=Get-VCDRCloudFileSystem 
 $ProtectedSites=Get-VCDRProtectedSite -CloudFileSystem $cloudFileSystem
 $ProtectionGroups=Get-VCDRProtectionGroup  -CloudFileSystem $cloudFileSystem
 $Snapshots=Get-VCDRSnapshot -ProtectionGroups $ProtectionGroups
 $Vms=Get-VCDRProtectedVm -CloudFileSystem $cloudFileSystem
-Disconnect-VCDRServer -server $VCDR
+Disconnect-VCDRService
 ``` 
 
 _Script-2_
 ```
-$token=_"your VMC token"
-$server = "vcdr-aaa-bbb-ccc-ddd.app.vcdr.vmware.com"
-Connect-VCDRServer  -server $server -token $token 
+$token=_"your VMC token" 
+Connect-VCDRService -token $token 
 
 #Return any Protection Site or each CloudFileSystem
 Get-VCDRCloudFileSystem| Get-VCDRProtectedSite  
@@ -84,14 +85,14 @@ Get-VCDRCloudFileSystem|Get-VCDRProtectionGroup|Get-VCDRSnapshot
 #Return any Protected VM for each CloudFileSystem
 Get-VCDRCloudFileSystem|Get-VCDRProtectedVm  
 
-Disconnect-VCDRServer -server $VCDR
+Disconnect-VCDRService
 
 ```
 
 
 A test script called **.\start-VCDRTest.ps1** is available 
 ```
-.\start-VCDRTest.ps1 -server "vcdr-xxx-yyy-zzz-kkk.app.vcdr.vmware.com" -token "<my VMC TOKEN>"
+.\start-VCDRTest.ps1 -token "<my VMC TOKEN>"
 ```
 ***
 
