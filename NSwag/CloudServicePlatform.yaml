@@ -177,6 +177,7 @@ components:
         id_token:
           description: 'The ID Token is a signed JWT token returned from the authorization server and contains the user’s profile information, including the domain of the identity provider. This domain is used to obtain the identity provider URL. This token is used for optimization so the application can know the identity of the user, without having to make any additional network requests. This token can be generated via the Authorization Code flow only.'
           type: string 
+          nullable: true
         refresh_token:
           description: The value of the Refresh token. 
           type: string

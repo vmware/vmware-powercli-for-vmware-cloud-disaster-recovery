@@ -527,8 +527,7 @@ namespace VMware.VCDRService
         /// <summary>
         /// The ID Token is a signed JWT token returned from the authorization server and contains the user’s profile information, including the domain of the identity provider. This domain is used to obtain the identity provider URL. This token is used for optimization so the application can know the identity of the user, without having to make any additional network requests. This token can be generated via the Authorization Code flow only.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id_token", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [Newtonsoft.Json.JsonProperty("id_token", Required = Newtonsoft.Json.Required.AllowNull)]
         public string Id_token { get; set; }
 
         /// <summary>

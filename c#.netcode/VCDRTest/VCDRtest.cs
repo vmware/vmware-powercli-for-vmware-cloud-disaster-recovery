@@ -169,14 +169,13 @@ namespace VCDRTest
             Console.WriteLine("Help");
         }
         public static int Main(string[] args)
-        {
-            String org = String.Empty;
+        { 
             Boolean production = true;
             String token = String.Empty;  
             String region = String.Empty;  
-            if (args.Length < 2 && args.Length > 4)
+            if (args.Length < 1 && args.Length > 3)
             {
-                System.Console.WriteLine("Please enter the  token arguments.");
+                Help();
                 return 1;
             }
             var p = new VcdrTest();
@@ -184,8 +183,7 @@ namespace VCDRTest
             for (int index = 0; index < args.Length; index += 2)
             {
                 switch (args[index])
-                {
-                    case "-org": org = args[index + 1]; break;
+                { 
                     case "-env":
                         if (args[index + 1].Equals("production", StringComparison.OrdinalIgnoreCase))
                         {
@@ -212,15 +210,9 @@ namespace VCDRTest
             }
             if (!String.IsNullOrEmpty(token))
             {
-                if (!String.IsNullOrEmpty(org) && !String.IsNullOrEmpty(region))
-                {
+                
                     p.DoitService(token, region, production);
-                }
-                else
-                {
-                    Console.WriteLine("Org and Region parameters cannot coexist with server");
-                    Help();
-                }
+            
             }
 
             else
