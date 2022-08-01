@@ -48,17 +48,13 @@ namespace VMware.VCDRService
         private readonly string Token;
 
         
-        public Boolean Verbose { get; set; }
-
-#pragma warning disable IDE0052 // Remove unread private members
-        private readonly Timer? timer;
-#pragma warning restore IDE0052 // Remove unread private members
+        public Boolean Verbose { get; set; } 
+        private readonly Timer? timer; 
         private readonly CloudServicePlatform csp;
         private ApiTokenDetailsDto? TokenDetails { get; set; }
         private List<TenantDeployment> VcdrDeployment { get; set; }
-        private Dictionary<String, VCDRServer> VcdrInstances { get; set; }
-
-        public VCDRServer ActiveVcdrInstance { get; private set; }
+        private Dictionary<String, VCDRServer> VcdrInstances { get; set; } 
+        public VCDRServer? ActiveVcdrInstance { get; private set; }
         public string AccessToken { get; private set; }
          
 
@@ -67,6 +63,7 @@ namespace VMware.VCDRService
         private readonly HttpClient _httpClient;
         public VcdrService(String token, String? cspBaseUrl = null, String? vcdrBackendUrl = null)
         {
+            if (Verbose) System.Console.WriteLine("Start Constructor");
             this.Token = token;
             _httpClient = new HttpClient();
             VcdrInstances = new Dictionary<string, VCDRServer>();
@@ -96,75 +93,56 @@ namespace VMware.VCDRService
                     httpClient.DefaultRequestHeaders.Add("x-da-access-token", AccessToken);
                     VCDRServer server = new VCDRServer(httpClient, item);
                     VcdrInstances.Add(item.Config.Cloud_provider.Region, server);
+                    if (ActiveVcdrInstance == null) ActiveVcdrInstance = server;
                 }
-                ActiveVcdrInstance = SelectRegion();
             }
             else throw new VcdrException("Connection failed", 1);
+            if (Verbose)                 System.Console.WriteLine("End Constructor"); 
         }
 
         public void Disconnect()
         {
-            if (Verbose)
-            {
-                System.Console.WriteLine("Start Disconnect");
-            }
+            if (Verbose) System.Console.WriteLine("Start Disconnect");
             if (timer != null)
                 timer.Dispose();
             if (_httpClient != null)
                 _httpClient.Dispose();
-            if (Verbose)
-            {
-                System.Console.WriteLine("End Disconnect");
-            }
-
+            if (Verbose) System.Console.WriteLine("End Disconnect");
         }
 
         public Boolean CompareToken(String token)
         {
             return token == Token;
         }
-        /*
-         *  
-            us-east-2	US East (Ohio)
-            us-east-1	US East (N. Virginia)
-            us-west-1	US West (N. California)
-            us-west-2	US West (Oregon)
-            af-south-1	Africa (Cape Town)
-            ap-east-1	Asia Pacific (Hong Kong)
-            ap-southeast-3	Asia Pacific (Jakarta)
-            ap-south-1	Asia Pacific (Mumbai)
-            ap-northeast-3	Asia Pacific (Osaka)
-            ap-northeast-2	Asia Pacific (Seoul)
-            ap-southeast-1	Asia Pacific (Singapore)
-            ap-southeast-2	Asia Pacific (Sydney)
-            ap-northeast-1	Asia Pacific (Tokyo)
-            ca-central-1	Canada (Central)
-            eu-central-1	Europe (Frankfurt)
-            eu-west-1	Europe (Ireland)
-            eu-west-2	Europe (London)
-            eu-south-1	Europe (Milan)
-            eu-west-3	Europe (Paris)
-            eu-north-1	Europe (Stockholm)
-            me-south-1	Middle East (Bahrain)
-            sa-east-1	South America (São Paulo)
-        */
+       
 
 
-        public List<VcdrSummary> GetVcdrInstances()
+        public List<VcdrSummary> GetVcdrInstances(String region = "")
         {
             var result = new List<VcdrSummary>();
             foreach (var item in VcdrInstances.Values)
             {
-                result.Add(new VcdrSummary(item));
-
+                if (String.IsNullOrEmpty(region))
+                {
+                    result.Add(new VcdrSummary(item));
+                }
+                else if (item.Region == region)
+                {
+                    result.Add(new VcdrSummary(item)); 
+                    break;
+                }
             }
             return result;
         }
 
         public VCDRServer SelectRegion(String region = "")
-        { 
-            
-            if (VcdrInstances.ContainsKey(region)) { return VcdrInstances[region]; }
+        {
+
+            if (VcdrInstances.ContainsKey(region))
+            {
+                ActiveVcdrInstance = VcdrInstances[region];
+                return VcdrInstances[region];
+            }
             foreach (var item in VcdrDeployment)
             {
                 if (String.IsNullOrEmpty(region))

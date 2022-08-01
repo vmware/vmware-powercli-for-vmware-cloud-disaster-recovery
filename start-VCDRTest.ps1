@@ -36,18 +36,17 @@
            VMC API token
 
         .EXAMPLE
-            .\VCDR-test.ps1 -server "vcdr-xxx-yyy-zzz-kkk.app.vcdr.vmware.com" -token "<my VMC TOKEN>"
+            .\VCDR-test.ps1  -token "<my VMC TOKEN>"
             Description
             -----------
             Run the test
 
         .NOTES
             FunctionName    : start-VCDRTest
-            Created by      : VMware
-            Date Coded      : 2022/02/20
+            Created by      : VMware 
             Modified by     : VMware
-            Date Modified   : 2022/04/15 12:12:10
-            More info       : https://vmware.github.com/
+            Date Modified   : 2022/08/1
+            More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
         .LINK
 
     #>
@@ -105,4 +104,6 @@ if ($cloudFileSystems) {
         Write-Host "`n********************`n"
     }
 }
+
 Disconnect-VCDRService
+Write-Host "Bye.`n"

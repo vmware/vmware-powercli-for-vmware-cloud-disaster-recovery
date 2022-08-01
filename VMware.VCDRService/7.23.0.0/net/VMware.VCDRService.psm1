@@ -27,7 +27,7 @@
 
 class AWSRegions : System.Management.Automation.IValidateSetValuesGenerator {
     [String[]] GetValidValues() {  
-            return $Script:AwsActiveRegion
+        return $Script:AwsActiveRegion
     }
 }
 
@@ -38,11 +38,11 @@ update-TypeData -TypeName "VMware.VCDRService.ProtectedSite" -DefaultDisplayProp
 update-TypeData -TypeName "VMware.VCDRService.VCDRServer" -DefaultDisplayPropertySet Server , Version, OrgId, Region
 update-TypeData -TypeName "VMware.VCDRService.VmSummary" -DefaultDisplayPropertySet Name, Size, Vcdr_vm_id
 update-TypeData -TypeName "VMware.VCDRService.RecoverySddc"  -DefaultDisplayPropertySet Name, Region, Availability_zones
-update-TypeData -TypeName "VMware.VCDRService.VCDRService" -DefaultDisplayPropertySet OrgId,VcdrInstances
-update-TypeData -TypeName "VMware.VCDRService.VcdrSummary" -DefaultDisplayPropertySet Id,Url,Region
+update-TypeData -TypeName "VMware.VCDRService.VCDRService" -DefaultDisplayPropertySet OrgId, VcdrInstances
+update-TypeData -TypeName "VMware.VCDRService.VcdrSummary" -DefaultDisplayPropertySet Id, Url, Region
 
 New-Variable -Scope Script -Name DefaultVCDRService 
-New-Variable -Scope Script -option Constant -Name AWSRegions -value @('us-east-2','us-east-1','us-west-1','us-west-2','af-south-1','ap-east-1','ap-southeast-3','ap-south-1','ap-northeast-3','ap-northeast-2','ap-southeast-1','ap-southeast-2','ap-northeast-1','ca-central-1','eu-central-1','eu-west-1','eu-west-2','eu-south-1','eu-west-3','eu-north-1','me-south-1','sa-east-1')
+New-Variable -Scope Script -option Constant -Name AWSRegions -value @('us-east-2', 'us-east-1', 'us-west-1', 'us-west-2', 'af-south-1', 'ap-east-1', 'ap-southeast-3', 'ap-south-1', 'ap-northeast-3', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2', 'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2', 'eu-south-1', 'eu-west-3', 'eu-north-1', 'me-south-1', 'sa-east-1')
 New-Variable -Scope Script -name AwsActiveRegion -Value $AWSRegions
 New-Variable -Scope Script -Name PagingSize -Value 100
 
@@ -53,10 +53,10 @@ New-Variable -Scope Script -Name PagingSize -Value 100
     .DESCRIPTION
             This cmdlet establishes a connection to a VCDR Service. The cmdlet starts a new session or re-establishes
     a previous session with a VCDR Server system using the specified parameters.
-    .PARAMETER Name
-        The name of the Cloud File System
-    .PARAMETER Id
-        The identifier of the cloud file system.
+    .PARAMETER Token
+        The tokne used to authenticate VMC
+    .PARAMETER Region
+        The Region set as default for any cmdlet operation
     .EXAMPLE
         $token="<my VMC TOKEN>"
             
@@ -70,43 +70,36 @@ New-Variable -Scope Script -Name PagingSize -Value 100
     .NOTES
         FunctionName    : Connect-VCDRService
         Created by      : VMware
-        Date Coded      : 2022/02/20
         Modified by     : VMware
-        Date Modified   : 2022/02/20 16:12:10
-        More info       : https://vmware.github.com/
+        Date Modified   : 2022/08/01 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
     .LINK
 
 #>
 Function Connect-VCDRService {
+    [OutputType([VMware.VCDRService.VCDRService])]
     [CmdletBinding()]
-    Param(
-        [Parameter( Mandatory = $true)]
+    Param( 
+        [Parameter( Mandatory = $true)] 
         [String]  $Token, 
         [Parameter( Mandatory = $false)]
-        [ValidateSet([AWSRegions],ErrorMessage="Value '{0}' is not a valid region. Try one of: {1}")]
+        [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region, 
         [String] $cspBaseUrl ,
         [String] $vcdrBackendUrl  
-    )
-    Begin { 
-    }
-    Process {
-            if ($Script:DefaultVCDRService){
-                if ($Script:DefaultVCDRService.CompareToken($Token)){
-                    throw "Already connected to Org:"+$Script:DefaultVCDRService.OrgId+ " . Use Disconnect-VCDRService to disconnect from this Org."
-                }
-                $Script:DefaultVCDRService.Disconnect
-            } 
-            [VMware.VCDRService.VCDRService] $VCDRServiceClient = New-Object VMware.VCDRService.VCDRService($Token, $cspBaseUrl,$vcdrBackendUrl) 
-            Set-Variable -Scope Script -name DefaultVCDRService -value $VCDRServiceClient
-            $Script:AwsActiveRegion = $VCDRServiceClient.GetActiveRegions();
+    ) 
+    if ($Script:DefaultVCDRService) {
+        if ($Script:DefaultVCDRService.CompareToken($Token)) {
+            throw "Already connected to Org:" + $Script:DefaultVCDRService.OrgId + " . Use Disconnect-VCDRService to disconnect from this Org."
         }
-    
-    End { 
-        return $VCDRServiceClient
-    }
+        $Script:DefaultVCDRService.Disconnect
+    } 
+    [VMware.VCDRService.VCDRService] $VCDRServiceClient = New-Object VMware.VCDRService.VCDRService($Token, $cspBaseUrl, $vcdrBackendUrl) 
+    Set-Variable -Scope Script -name DefaultVCDRService -value $VCDRServiceClient
+    $Script:AwsActiveRegion = $VCDRServiceClient.GetActiveRegions();
+  
+    return $VCDRServiceClient 
 }
-
 
 <#
     .SYNOPSIS
@@ -128,77 +121,146 @@ Function Connect-VCDRService {
     .NOTES
         FunctionName    : Disconnect-VCDRService
         Created by      : VMware
-        Date Coded      : 2022/02/20
         Modified by     : VMware
-        Date Modified   : 2022/02/20 16:12:10
-        More info       : https://vmware.github.com/
+        Date Modified   : 2022/08/01 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
     .LINK
 
 #> 
-Function Disconnect-VCDRService {      
-    Begin {
-    }
-    Process {
-        if ($Script:DefaultVCDRService){ 
-            $Script:DefaultVCDRService.Disconnect()
-            Remove-Variable -Scope Script -name DefaultVCDRService 
-            Set-Variable -Scope Script -name AwsActiveRegion -value $AWSRegions
-        }
-    }
-    End {
-    }
+Function Disconnect-VCDRService {  
+    if ($Script:DefaultVCDRService) { 
+        $Script:DefaultVCDRService.Disconnect()
+        Remove-Variable -Scope Script -name DefaultVCDRService 
+        Set-Variable -Scope Script -name AwsActiveRegion -value $AWSRegions
+    } 
 }
 
 
 
  
+<#
+    .SYNOPSIS
+        This cmdlet return the list of VCDR instances available in the Org .
+    .DESCRIPTION
+            This cmdlet return each VCDR Server instance on each available region.
+    .PARAMETER Region
+        Return the VCDR server for this specific region
+    .EXAMPLE
+        $token="<my VMC TOKEN>"
+        $VCDR=Connect-VCDRService -token $token  
+        Get-VCDRInstance
+
+        Disconnect-VCDRService   
+
+        Description
+        -----------
+        This example connect to a VCDR Server system  using a VMC token.Set the new default VCDR Server and then disconnects.
 
 
+    .NOTES
+        FunctionName    : Get-VCDRInstance
+        Created by      : VMware
+        
+        Modified by     : VMware
+        Date Modified   : 2022/08/01 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
+    .LINK
 
-Function Get-VCDRInstance {
-    Begin { 
-        $result = [VMware.VCDRService.VcdrSummary[]]@()
-    }
-    Process {
-        $result = $DefaultVCDRService.GetVcdrInstances()
-       
-    }
-    End {
-        return $result
-    }
+#> 
+ 
+Function Get-VCDRInstance { 
+    [OutputType([VMware.VCDRService.VcdrSummary[]])]
+    param(
+        [Parameter( Mandatory = $False)]
+        [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
+        [String] $Region
+    )
+    $result = [VMware.VCDRService.VcdrSummary[]]@()    
+    $result = $Script:DefaultVCDRService.GetVcdrInstances($Region)
+    return $result
+     
 }
 
 
 
 
-Function Set-DefaultVCDRInstance {
-    [CmdletBinding(DefaultParameterSetName = 'Default')]
-   #           [OutputType([VMware.VCDRService.VcdrSummary[]])]
-   [Parameter( Mandatory = $True)]
-   [ValidateSet([AWSRegions],ErrorMessage="Value '{0}' is not a valid region. Try one of: {1}")]
-   [String] $Region
-      Begin {  
-      }
-      Process {
-          $Server = $DefaultVCDRService.SelectRegion($Region)
-          $result=  New-Object -TypeName "VMware.VCDRService.VcdrSummary" -ArgumentList $Server
-      }
-      End {
-          return $result
-      }
-  }
+<#
+    .SYNOPSIS
+        This cmdlet set the default VCDR Server in the Org .
+    .DESCRIPTION
+            This cmdlet set the defult server.   
+    .PARAMETER Region
+        The Region set as default for any cmdlet operation
+    .EXAMPLE
+        $token="<my VMC TOKEN>"
+        $VCDR=Connect-VCDRService -token $token  
+        Set-DefaultVCDRInstance -Region eu-west-1
 
-  Function Get-DefaultVCDRInstance { 
-      Begin {  
-      }
-      Process {
-          $Server = $DefaultVCDRService.ActiveVcdrInstance
-          $result=  New-Object -TypeName "VMware.VCDRService.VcdrSummary" -ArgumentList $Server         
-      }
-      End {
-          return $result
-      }
-  }
+        Disconnect-VCDRService   
+
+        Description
+        -----------
+        This example connect to a VCDR Server system  using a VMC token.Set the new default VCDR Server and then disconnects.
+
+
+    .NOTES
+        FunctionName    : Set-DefaultVCDRInstance
+        Created by      : VMware
+        
+        Modified by     : VMware
+        Date Modified   : 2022/08/01 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
+    .LINK
+
+#> 
+
+Function Set-DefaultVCDRInstance {
+    [OutputType([VMware.VCDRService.VcdrSummary])]
+    param(
+        [CmdletBinding(DefaultParameterSetName = 'Default')] 
+        [Parameter( Mandatory = $True)]
+        [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
+        [String] $Region
+    )
+    $Server = $Script:DefaultVCDRService.SelectRegion($Region)
+    $result = New-Object -TypeName "VMware.VCDRService.VcdrSummary" -ArgumentList $Server    
+    return $result  
+}
+
+
+<#
+    .SYNOPSIS
+        This cmdlet return the default VCDR Server in the Org .
+    .DESCRIPTION
+            This cmdlet return the defult server.   
+
+    .EXAMPLE
+        $token="<my VMC TOKEN>"
+        $VCDR=Connect-VCDRService -token $token -region us-west-2
+        Get-DefaultVCDRInstance
+
+        Disconnect-VCDRService   
+
+        Description
+        -----------
+        This example connect to a VCDR Server system  using a VMC token.Return the default VCDR Server and then disconnects.
+
+
+    .NOTES
+        FunctionName    : Get-DefaultVCDRInstance 
+        Created by      : VMware
+        Modified by     : VMware
+        Date Modified   : 2022/08/01 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
+    .LINK
+
+#> 
+Function Get-DefaultVCDRInstance {  
+    [OutputType([VMware.VCDRService.VcdrSummary])]
+    $Server = $Script:DefaultVCDRService.ActiveVcdrInstance
+    $result = New-Object -TypeName "VMware.VCDRService.VcdrSummary" -ArgumentList $Server   
+    return $result    
+}
 
   
 
@@ -238,10 +300,9 @@ Function Set-DefaultVCDRInstance {
         .NOTES
             FunctionName    : Get-VCDRCloudFileSystem
             Created by      : VMware
-            Date Coded      : 2022/02/20
             Modified by     : VMware
-            Date Modified   : 2022/02/20 16:12:10
-            More info       : https://vmware.github.com/
+            Date Modified   : 2022/08/01 
+            More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
         .LINK
 
     #>
@@ -250,7 +311,7 @@ Function Get-VCDRCloudFileSystem {
     [OutputType([VMware.VCDRService.CloudFileSystem[]])]
     Param( 
         [Parameter( Mandatory = $false)]
-        [ValidateSet([AWSRegions],ErrorMessage="Value '{0}' is not a valid region. Try one of: {1}")]
+        [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region,
         [Parameter( Mandatory = $false, ParameterSetName = "ByName", HelpMessage = "The name of the Cloud File System ")]
         [String]  $Name ,
@@ -258,9 +319,10 @@ Function Get-VCDRCloudFileSystem {
         [String]  $Id
     )
     Begin { 
-        if ($DefaultVCDRService) { 
-            $Server = $DefaultVCDRService.SelectRegion($Region)
-        } else {
+        if ($Script:DefaultVCDRService) { 
+            $Server = $Script:DefaultVCDRService.SelectRegion($Region)
+        }
+        else {
             throw "No Server connected"
         } 
         $result = [VMware.VCDRService.CloudFileSystem[]]@()
@@ -317,10 +379,9 @@ Function Get-VCDRCloudFileSystem {
         .NOTES
             FunctionName    : Get-VCDRProtectedSite
             Created by      : VMware
-            Date Coded      : 2022/02/20
             Modified by     : VMware
-            Date Modified   : 2022/02/20 16:12:10
-            More info       : https://vmware.github.com/
+            Date Modified   : 2022/08/01 
+            More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
         .LINK
 
     #>
@@ -338,7 +399,7 @@ Function Get-VCDRProtectedSite {
 
     )
     Begin {
-        if ($DefaultVCDRService) {   
+        if ($Script:DefaultVCDRService) {   
             $result = [VMware.VCDRService.ProtectedSite[]]@()
 
             $protectedSitesFilterSpec = New-Object -TypeName  'VMware.VCDRService.ProtectedSitesFilterSpec'
@@ -355,12 +416,13 @@ Function Get-VCDRProtectedSite {
                     $protectedSitesFilterSpec.Vcenter_ids.Add($item)
                 }
             }
-        } else {
+        }
+        else {
             throw "No Server connected"
         } 
     }
     Process {
-        foreach($Cfs in $CloudFileSystem) {
+        foreach ($Cfs in $CloudFileSystem) {
             $Server = $Cfs.Server 
             [String]   $Cursor = $Null
             $protectedSites = [VMware.VCDRService.GetProtectedSitesResponse[]]@()
@@ -409,10 +471,9 @@ Function Get-VCDRProtectedSite {
         .NOTES
             FunctionName    : Get-VCDRProtectionGroup
             Created by      : VMware
-            Date Coded      : 2022/02/20
             Modified by     : VMware
-            Date Modified   : 2022/02/20 16:12:10
-            More info       : https://vmware.github.com/
+            Date Modified   : 2022/08/01 
+            More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
         .LINK
 
     #>
@@ -428,7 +489,7 @@ Function Get-VCDRProtectionGroup {
         [String[]]  $Site  
     )
     Begin { 
-        if ($DefaultVCDRService) {  
+        if ($Script:DefaultVCDRService) {  
             $result = [VMware.VCDRService.ProtectionGroup[]]@()
 
             $protectionGroupsFilterSpec = New-Object -TypeName  'VMware.VCDRService.ProtectionGroupsFilterSpec'
@@ -445,12 +506,13 @@ Function Get-VCDRProtectionGroup {
                     $protectionGroupsFilterSpec.Vcenter_ids.Add($item)
                 }
             } 
-        } else {
+        }
+        else {
             throw "No Server connected"
         }
     }
     Process {
-        foreach($Cfs in $CloudFileSystem) {            
+        foreach ($Cfs in $CloudFileSystem) {            
             $Server = $CloudFileSystem.Server 
             $protectedGroups = [VMware.VCDRService.GetProtectionGroupsResponse[]]@()
             [String]   $Cursor = $Null
@@ -493,10 +555,9 @@ Function Get-VCDRProtectionGroup {
         .NOTES
             FunctionName    : Get-VCDRSnapshot
             Created by      : VMware
-            Date Coded      : 2022/02/20
             Modified by     : VMware
-            Date Modified   : 2022/02/20 16:12:10
-            More info       : https://vmware.github.com/
+            Date Modified   : 2022/08/01 
+            More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
         .LINK
 
     #>
@@ -510,9 +571,10 @@ Function Get-VCDRSnapshot {
         [String ]  $SnapshotID
     )
     Begin { 
-        if ($DefaultVCDRService) {  
+        if ($Script:DefaultVCDRService) {  
             $result = [VMware.VCDRService.ProtectionGroupSnapshot[]]@()
-        } else {
+        }
+        else {
             throw "No Server connected"
         }
     }
@@ -523,7 +585,8 @@ Function Get-VCDRSnapshot {
                 $Server = $ProtectionGroup.Server
                 $result += $Server.GetProtectionGroupSnapshotDetails($ProtectionGroup, $SnapshotID)
             }
-        } else {
+        }
+        else {
 
             foreach ($ProtectionGroup in  $ProtectionGroups) {
                 $Server = $ProtectionGroup.Server
@@ -577,10 +640,9 @@ Function Get-VCDRSnapshot {
         .NOTES
             FunctionName    : Get-VCDRProtectedVm
             Created by      : VMware
-            Date Coded      : 2022/02/20
             Modified by     : VMware
-            Date Modified   : 2022/02/20 16:12:10
-            More info       : https://vmware.github.com/
+            Date Modified   : 2022/08/01 
+            More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
         .LINK
 
     #>
@@ -600,7 +662,7 @@ Function Get-VCDRProtectedVm {
         [VMware.VCDRService.ProtectionGroupSnapshot[]] $ProtectionGroupSnapshot 
     )
     Begin {
-        if ($DefaultVCDRService) {  
+        if ($Script:DefaultVCDRService) {  
             $result = [VMware.VCDRService.VmSummary[]]@()
 
             $VmsFilterSpec = New-Object -TypeName  'VMware.VCDRService.VmsFilterSpec'
@@ -630,12 +692,13 @@ Function Get-VCDRProtectedVm {
                     $VmsFilterSpec.Protection_group_snapshot_id.Add($pgs.Id)
                 }
             }
-        } else {
+        }
+        else {
             throw "No Server connected"
         }
     }
     Process {
-        foreach($Cfs in $CloudFileSystem) {  
+        foreach ($Cfs in $CloudFileSystem) {  
             $Server = $CloudFileSystem.Server 
             [String] $Cursor = $Null
             do {
@@ -681,10 +744,10 @@ Function Get-VCDRProtectedVm {
          .NOTES
             FunctionName    : Get-VCDRRecoverySddc
             Created by      : VMware
-            Date Coded      : 2022/02/20
+            
             Modified by     : VMware
-            Date Modified   : 2022/02/20 16:12:10
-            More info       : https://vmware.github.com/
+            Date Modified   : 2022/08/01 
+            More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
         .LINK
 
     #>
@@ -693,7 +756,7 @@ Function Get-VCDRRecoverySddc {
     [OutputType([VMware.VCDRService.RecoverySddc[]])]
     Param(
         [Parameter( Mandatory = $false)]
-        [ValidateSet([AWSRegions],ErrorMessage="Value '{0}' is not a valid region. Try one of: {1}")]
+        [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region,
         [Parameter( Mandatory = $false, ParameterSetName = "ByName", HelpMessage = "The name of the Recovery SDDC ")]
         [String]  $Name ,
@@ -701,9 +764,10 @@ Function Get-VCDRRecoverySddc {
         [String]  $Id  
     )
     Begin { 
-        if ($DefaultVCDRService) { 
-            $Server = $DefaultVCDRService.SelectRegion($Region)
-        } else {
+        if ($Script:DefaultVCDRService) { 
+            $Server = $Script:DefaultVCDRService.SelectRegion($Region)
+        }
+        else {
             throw "No Server connected"
         } 
         $result = [VMware.VCDRService.RecoverySddc[]]@()
@@ -746,3 +810,6 @@ Export-ModuleMember -Function Get-VCDRProtectionGroup
 Export-ModuleMember -Function Get-VCDRSnapshot
 Export-ModuleMember -Function Get-VCDRProtectedVm
 Export-ModuleMember -Function Get-VCDRRecoverySddc
+
+Set-Alias -Name Connect-VCDRServer -Value Connect-VCDRService
+Set-Alias -Name Disconnect-VCDRServer -Value Disconnect-VCDRService
