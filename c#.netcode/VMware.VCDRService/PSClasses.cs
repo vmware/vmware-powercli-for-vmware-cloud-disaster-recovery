@@ -33,14 +33,15 @@ namespace VMware.VCDRService
     using System;
     using System.Threading;
     using System.Net.Http;
+
     /// <summary>
     /// Detailed information about an individual cloud file system.
     /// </summary>
     public class CloudFileSystem : CloudFileSystemDetails
     {
-
         public string IRRServer { get; set; }
         public VCDRServer Server { get; set; }
+
         public CloudFileSystem(VCDRServer server, CloudFileSystemDetails c)
         {
             this.Server = server;
@@ -50,10 +51,8 @@ namespace VMware.VCDRService
                 var prop2 = c.GetType().GetProperty(prop.Name);
                 prop2.SetValue(this, prop.GetValue(c, null), null);
             }
-
         }
     }
-
 
     /// <summary>
     /// Detailed information for protection groups.
@@ -62,9 +61,13 @@ namespace VMware.VCDRService
     {
         /// <summary>
         /// Cloud file system unique identifier.
-        /// </summary> 
+        /// </summary>
         public CloudFileSystem CloudFileSystem { get; set; }
-        public VCDRServer Server { get { return CloudFileSystem.Server; } }
+        public VCDRServer Server
+        {
+            get { return CloudFileSystem.Server; }
+        }
+
         public ProtectionGroup(ProtectionGroupDetails c)
         {
             // copy base class properties.
@@ -73,10 +76,8 @@ namespace VMware.VCDRService
                 var prop2 = c.GetType().GetProperty(prop.Name);
                 prop2.SetValue(this, prop.GetValue(c, null), null);
             }
-
         }
     }
-
 
     /// <summary>
     /// Detailed information about protected sites.
@@ -85,28 +86,29 @@ namespace VMware.VCDRService
     {
         /// <summary>
         /// Cloud file system unique identifier.
-        /// </summary> 
+        /// </summary>
         public CloudFileSystem CloudFileSystem { get; set; }
+
         public ProtectedSite(ProtectedSiteDetails c)
         {
             // copy base class properties.
             foreach (var prop in c.GetType().GetProperties())
             {
-                var prop2 = c.GetType().GetProperty(prop.Name); 
-                prop2.SetValue(this, prop.GetValue(c, null), null); 
+                var prop2 = c.GetType().GetProperty(prop.Name);
+                prop2.SetValue(this, prop.GetValue(c, null), null);
             }
-
         }
     }
-
-
 
     public class ProtectionGroupSnapshot : ProtectionGroupSnapshotDetails
     {
         /// <summary>
         /// Cloud file system unique identifier.
-        /// </summary> 
-        public CloudFileSystem CloudFileSystem { get { return ProtectionGroup.CloudFileSystem; } }
+        /// </summary>
+        public CloudFileSystem CloudFileSystem
+        {
+            get { return ProtectionGroup.CloudFileSystem; }
+        }
         public ProtectionGroup ProtectionGroup { get; set; }
 
         public ProtectionGroupSnapshot(ProtectionGroupSnapshotDetails c)
@@ -117,7 +119,6 @@ namespace VMware.VCDRService
                 var prop2 = c.GetType().GetProperty(prop.Name);
                 prop2.SetValue(this, prop.GetValue(c, null), null);
             }
-
         }
     }
 
@@ -134,11 +135,8 @@ namespace VMware.VCDRService
                 var prop2 = c.GetType().GetProperty(prop.Name);
                 prop2.SetValue(this, prop.GetValue(c, null), null);
             }
-
         }
     }
-
-
 }
 
 #pragma warning restore CS8602 // Dereference of a possibly null reference.

@@ -25,18 +25,43 @@
 * POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-using System; 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable. 
+using System;
+
 namespace VMware.VCDRService
 {
-      public class IrrServer
+    public class IrrServer
+    {
+        public IrrServer()
         {
-            public string Ip { get; set; }
-            public string Url { get; set; }
-            public Guid Id { get; set; }
-            public String Version { get; set; }
-            public string Server { get  ; set  ; }
+            Ip = String.Empty;
+            Url = String.Empty;
+            Id = Guid.Empty;
+            Version = String.Empty;
+            Server = String.Empty;
         }
-}
 
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public IrrServer(string ip, string url, Guid id, string version, string server)
+        {
+            Ip = ip;
+            Url = url;
+            Id = id;
+            Version = version;
+            Server = server;
+        }
+
+        public IrrServer(IrrServer src)
+        {
+            Ip = src.Ip;
+            Url = src.Url;
+            Id = src.Id;
+            Version = src.Version;
+            Server = src.Server;
+        }
+
+        public string Ip { get; set; }
+        public string Url { get; set; }
+        public Guid Id { get; set; }
+        public String Version { get; set; }
+        public string Server { get; set; }
+    }
+}

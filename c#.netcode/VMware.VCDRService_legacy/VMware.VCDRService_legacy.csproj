@@ -47,8 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApiException.cs" />
-    <Compile Include="Client.cs" />
-    <Compile Include="ClientPart2.cs" />
+    <Compile Include="VCDRServer.cs" />
+    <Compile Include="VcdrDeployment.cs" />
+    <Compile Include="VCDRServer-2.cs" />
     <Compile Include="CloudServicePlatform.cs" />
     <Compile Include="IrrServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -24,81 +24,107 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
+
+
+<#
+    .SYNOPSIS
+        Build the CmdLets
+    .DESCRIPTION
+        Build the CmdLets
+    .PARAMETER Version
+        Define the CmdLets version. Default is the content of VERSION file
+    .PARAMETER NuGetApiKey
+        Private Key to publish to PowerShell Gallery
+    .PARAMETER Publish
+        Publish to PowerShell Gallery. If not specified will use the -whatif option
+    .PARAMETER OpenApiFile
+        VCDR YAML file [Default: vcdr.yaml]
+    
+
+    .EXAMPLE
+         .\build.ps1 -NuGetApiKey $apiKey -Version 2.0.0.1
+
+    .NOTES
+        FunctionName    : Connect-VCDRService
+        Created by      : VMware
+        Modified by     : VMware
+        Date Modified   : 2022/08/01 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
+    .LINK
+
+#>
+
+
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $false)] [string] $Version ,
-    [Parameter(Mandatory = $false)] [string] $NuGetApiKey,
-    [Parameter(Mandatory = $false)] [string] $OpenApiFile ="vcdr.yaml"
+  [Parameter(Mandatory = $false)] [string] $Version ,
+  [Parameter(Mandatory = $false)] [string] $NuGetApiKey,
+  [Parameter(Mandatory = $false)] [string] $OpenApiFile = "vcdr.yaml",
+  [Parameter(Mandatory = $false)] [Switch] $Publish
+    
 )
 #Set-StrictMode -Version 3
 $ErrorActionPreference = "Stop"
- 
+Write-Host "Starting Build process"
+Write-Host "Root Directory is: $PSScriptRoot"
+Write-Host "#################################################################################"
+Write-Host
+
+$NSWAG_FRAMEWORK = "NetCore31"
 $CONFIGURATION = "Release"
 $FRAMEWORK = "netcoreapp3.1"
-$LEGACYFRAMEWORK="4.7"
+$LEGACYFRAMEWORK = "4.7"
 $PLATFORM = "AnyCPU"
-$BASEDIR = "."
+$BASEDIR = $PSScriptRoot
 
-if ([string]::IsNullOrEmpty($Version)){
+if ([string]::IsNullOrEmpty($Version)) {
   $Version = Get-Content -path $BASEDIR\VERSION
 }
 $VCDRSERVICE_DIRNAME = "VMware.VCDRService"
+$PUBLISH_FOLDER = "$BASEDIR\publish"
 $VCDRSERVICELEGACY_DIRNAME = "VMware.VCDRService_legacy"
 $VCDRSERVICE_SRC = "$BASEDIR\c#.netcode\$VCDRSERVICE_DIRNAME"
 $VCDRSERVICE_LEGACY_SRC = "$BASEDIR\c#.netcode\$VCDRSERVICELEGACY_DIRNAME"
-$VCDRSERVICE_BASEDIR = "$BASEDIR\VMware.VCDRService"
+$VCDRSERVICE_BASEDIR = "$PUBLISH_FOLDER\VMware.VCDRService"
 $VCDRSERVICE_PWSH_SOURCE = "$BASEDIR\src"
 $VCDRSERVICE = "$VCDRSERVICE_BASEDIR\$VERSION"
+$VCDR_SWAG_DIR = "$BASEDIR\NSwag"
+ 
+ 
+if ( -not (Test-Path $PUBLISH_FOLDER)) {
+  #PowerShell Create directory if not exists
+  New-Item $PUBLISH_FOLDER -ItemType Directory
+}
+else {
+  remove-item  -path $PUBLISH_FOLDER\*.zip
+}
 
 # Create the C# client
 #NSWAG https://github.com/RicoSuter/NSwag has to be installed
 #region NSWAG
-$NSWAG_OUTPUTFILE = "/output:.\c#.netcode\VMware.VCDRService\Client.cs"
-$NSWAG_INPUTFILE = "/input:.\NSwag\$OpenApiFile"
+Set-Location -Path $VCDR_SWAG_DIR
+& nswag run .\CloudServicePlatform.nswag /runtime:$NSWAG_FRAMEWORK
+& nswag run .\VcdrBackendPlatform.nswag /runtime:$NSWAG_FRAMEWORK
+& nswag run .\vcdr.nswag   /input:$OpenApiFile /runtime:$NSWAG_FRAMEWORK
 
-$CLASSNAME = "/classname:VCDRServer"
-$NAMESPACE = "/namespace:VMware.VCDRService"
-$INJECTHTTPCLIENT = "/injectHttpClient:true"
-$GENERATEBASEURLPROPERTY = "/generateBaseUrlProperty:false"
-$USEBASEURL = "/useBaseUrl:true"
-$GENERATESYNCMETHODS = "/generateSyncMethods:false"
-$GENERATECLIENT = "/generateClientClasses:true"
-$GENERATEXCEPTIONCLASS = "/generateExceptionClasses:false"
-& nswag openapi2csclient $CLASSNAME $NAMESPACE $INJECTHTTPCLIENT $GENERATESYNCMETHODS $USEBASEURL $GENERATEBASEURLPROPERTY $GENERATECLIENT $GENERATEXCEPTIONCLASS $NSWAG_INPUTFILE $NSWAG_OUTPUTFILE
-
-$GENERATEBASEURLPROPERTY = "/generateBaseUrlProperty:true"
-$GENERATESYNCMETHODS = "/generateSyncMethods:true"
-$NSWAG_OUTPUTFILE = "/output:.\c#.netcode\VMware.VCDRService\CloudServicePlatform.cs"
-$NSWAG_INPUTFILE = "/input:.\NSwag\CloudServicePlatform.yaml"
-$CLASSNAME = "/classname:CloudServicePlatform" 
-& nswag openapi2csclient $CLASSNAME $NAMESPACE $INJECTHTTPCLIENT $GENERATESYNCMETHODS $USEBASEURL $GENERATEBASEURLPROPERTY $GENERATECLIENT $GENERATEXCEPTIONCLASS $NSWAG_INPUTFILE $NSWAG_OUTPUTFILE
-
-$GENERATEBASEURLPROPERTY = "/generateBaseUrlProperty:true"
-$GENERATESYNCMETHODS = "/generateSyncMethods:true"
-$NSWAG_OUTPUTFILE = "/output:.\c#.netcode\VMware.VCDRService\VcdrBackendPlatform.cs"
-$NSWAG_INPUTFILE = "/input:.\NSwag\VcdrBackendPlatform.yaml"
-$CLASSNAME = "/classname:VcdrBackendPlatform" 
-& nswag openapi2csclient $CLASSNAME $NAMESPACE $INJECTHTTPCLIENT $GENERATESYNCMETHODS $USEBASEURL $GENERATEBASEURLPROPERTY $GENERATECLIENT $GENERATEXCEPTIONCLASS $NSWAG_INPUTFILE $NSWAG_OUTPUTFILE
-
-
-
+ 
 #endregion NSWAG
 # start NET BUILD
 #region build
-Push-Location -Path $VCDRSERVICE_SRC
+Set-Location -Path $VCDRSERVICE_SRC
 & dotnet build
 
 & msbuild -t:Rebuild -p:Configuration=$CONFIGURATION -p:Platform=$PLATFORM
-Copy-Item -path ".\*.cs" -Destination "..\$VCDRSERVICELEGACY_DIRNAME" -Verbose
-Set-Location -Path ..\$VCDRSERVICELEGACY_DIRNAME
+Copy-Item -path "$VCDRSERVICE_SRC\*.cs" -Destination $VCDRSERVICE_LEGACY_SRC -Verbose
+Set-Location -Path $VCDRSERVICE_LEGACY_SRC
 & msbuild VMware.VCDRService_legacy.csproj /p:Configuration=$CONFIGURATION /p:Platform=$PLATFORM /p:TargetFrameworkVersion=$LEGACYFRAMEWORK -t:Rebuild
-Pop-Location
+Set-Location $BASEDIR
 #endregion build
 
 #Create Directories and copy files
 #region CopyFiles
 if (Test-Path -Path $VCDRSERVICE_BASEDIR) {
-    Remove-Item -path $VCDRSERVICE_BASEDIR -recurse -force
+  Remove-Item -path $VCDRSERVICE_BASEDIR -recurse -force
 }
 New-Item -Path $VCDRSERVICE -ItemType Directory
 New-Item -Path "$VCDRSERVICE\netcore" -ItemType Directory
@@ -112,7 +138,7 @@ Copy-Item -Path "$BASEDIR\open_source_licenses.txt"  -Destination "$VCDRSERVICE"
 #endregion CopyFiles
 
 #region CommonDescriptor
-$TemplateHeaderPSD1=@"
+$TemplateHeaderPSD1 = @"
 #
 # Module manifest for module 'VMware.VCDRService' Core & Desktop
 #
@@ -124,7 +150,7 @@ $TemplateHeaderPSD1=@"
 
 "@
 #remaining descriptor contents
-$TemplatePSD1=@"
+$TemplatePSD1 = @"
 
   # Script module or binary module file associated with this manifest.
   RootModule           = 'VMware.VCDRService.psm1'
@@ -254,12 +280,12 @@ $binaryModule = Import-Module -Name $binaryModulePath -PassThru
 $PSModule.OnRemove = {
    Remove-Module -ModuleInfo $binaryModule
 }
-'@|set-content  "$VCDRSERVICE\VMware.VCDRService.psm1"
+'@| set-content  "$VCDRSERVICE\VMware.VCDRService.psm1"
 #endregion VMware.VCDRService.psm1
 
 #region CoreDescriptor
 #descriptor for Standard Core
-$VariableTemplateCorePSD1=@"
+$VariableTemplateCorePSD1 = @"
   # Version number of this module.
   ModuleVersion        = '$Version'
 
@@ -272,12 +298,12 @@ $VariableTemplateCorePSD1=@"
   # Minimum version of the Windows PowerShell engine required by this module
   PowerShellVersion = '6.0.4'
 "@
-$TemplateHeaderPSD1+$VariableTemplateCorePSD1+$TemplatePSD1|set-content  -path "$VCDRSERVICE\netcore\VMware.VCDRService.psd1"
+$TemplateHeaderPSD1 + $VariableTemplateCorePSD1 + $TemplatePSD1 | set-content  -path "$VCDRSERVICE\netcore\VMware.VCDRService.psd1"
 #endregion CoreDescriptor
 
 #region NetDescriptor
 #descriptor for Standard .Net
-$VariableTemplateNetPSD1=@"
+$VariableTemplateNetPSD1 = @"
   # Version number of this module.
   ModuleVersion        = '$Version'
 
@@ -301,12 +327,12 @@ $VariableTemplateNetPSD1=@"
   CLRVersion = '4.0'
 "@
 
-$TemplateHeaderPSD1+$VariableTemplateNetPSD1+$TemplatePSD1|set-content  -path "$VCDRSERVICE\net\VMware.VCDRService.psd1"
+$TemplateHeaderPSD1 + $VariableTemplateNetPSD1 + $TemplatePSD1 | set-content  -path "$VCDRSERVICE\net\VMware.VCDRService.psd1"
 #endregion NetDescriptor
 
 #region NetSelectorDescriptor
 #descriptor for .Net selector
-$VariableTemplateCoreNetPSD1=@"
+$VariableTemplateCoreNetPSD1 = @"
   # Version number of this module.
   ModuleVersion        = '$Version'
 
@@ -318,23 +344,26 @@ $VariableTemplateCoreNetPSD1=@"
 
 "@
 
-$TemplateHeaderPSD1+$VariableTemplateCoreNetPSD1+$TemplatePSD1|set-content  "$VCDRSERVICE\VMware.VCDRService.psd1"
+$TemplateHeaderPSD1 + $VariableTemplateCoreNetPSD1 + $TemplatePSD1 | set-content  "$VCDRSERVICE\VMware.VCDRService.psd1"
 #endregion NetSelectorDescriptor
-$ZipFolder= "publish"
-if ( -not (Test-Path $ZipFolder)) {
-  #PowerShell Create directory if not exists
-  New-Item $ZipFolder -ItemType Directory
-}else {
-  remove-item  -path $ZipFolder\*.zip
-}
-
-$DestZip="$ZipFolder\VMware.VCDRService-"+$Version.replace( ".","-") +".zip"
-Compress-Archive -Path @(".\VMware.VCDRService",".\install.ps1","LICENSE","NOTICE","open_source_licenses.txt") -DestinationPath $DestZip
+Set-Location $BASEDIR
+#region Archive
+$DestZip = "$PUBLISH_FOLDER\VMware.VCDRService-" + $Version.replace( ".", "-") + ".zip"
+Compress-Archive -Path @("$PUBLISH_FOLDER\VMware.VCDRService", ".\install.ps1", "LICENSE", "NOTICE", "open_source_licenses.txt") -DestinationPath $DestZip
+#endregion Archive
 
 if ( $NuGetApiKey ) {
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
   Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -WhatIf -Verbose
-  Write-Output "To Publish run:`n  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -Verbose"
+  if ($Publish) { 
+    Write-Output "Publish flag detected - Start publishing on PSGallery `n"
+    Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey  -Verbose
+  }
+  else {
+    Write-Output "To Publish run:`n  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -Verbose"
+  }
 }
+
+#end
 Write-Output "`nDone.`n"
-Write-Output "To install execute .\install.ps1 -Install CurrentUser`n"
+Write-Output "To install locally execute .\install.ps1 -Install CurrentUser`n"

@@ -50,6 +50,15 @@ namespace VCDRTest
             RunTest(client);
         }
 
+        private void DoitService(String token, Uri server, Boolean production = true)
+        {
+            Console.WriteLine("Hello, VCDR!");
+            VcdrService clientService = (production) ? new VcdrService(token, server) : new VcdrService(token, server,StageCSP);
+
+            var client = clientService.SelectRegion( );
+
+            RunTest(client);
+        }
 
 
         internal void RunTest(VCDRServer client)
@@ -171,7 +180,8 @@ namespace VCDRTest
         public static int Main(string[] args)
         { 
             Boolean production = true;
-            String token = String.Empty;  
+            String token = String.Empty;
+            Uri? server = null;
             String region = String.Empty;  
             if (args.Length < 1 && args.Length > 3)
             {
@@ -183,7 +193,15 @@ namespace VCDRTest
             for (int index = 0; index < args.Length; index += 2)
             {
                 switch (args[index])
-                { 
+                {
+                    case "-server": 
+                        String u = args[index + 1];
+                        if (!u.StartsWith("https://"))
+                        {
+                            u = u.Insert(0, "https://");
+                        }
+                        server =new Uri( u);
+                        break;
                     case "-env":
                         if (args[index + 1].Equals("production", StringComparison.OrdinalIgnoreCase))
                         {
@@ -210,9 +228,11 @@ namespace VCDRTest
             }
             if (!String.IsNullOrEmpty(token))
             {
-                
+                if (server != null)
+                    p.DoitService(token, server, production);
+                else
                     p.DoitService(token, region, production);
-            
+
             }
 
             else

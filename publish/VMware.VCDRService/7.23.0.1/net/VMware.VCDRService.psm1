@@ -38,11 +38,11 @@ update-TypeData -TypeName "VMware.VCDRService.ProtectedSite" -DefaultDisplayProp
 update-TypeData -TypeName "VMware.VCDRService.VCDRServer" -DefaultDisplayPropertySet Server , Version, OrgId, Region
 update-TypeData -TypeName "VMware.VCDRService.VmSummary" -DefaultDisplayPropertySet Name, Size, Vcdr_vm_id
 update-TypeData -TypeName "VMware.VCDRService.RecoverySddc"  -DefaultDisplayPropertySet Name, Region, Availability_zones
-update-TypeData -TypeName "VMware.VCDRService.VCDRService" -DefaultDisplayPropertySet OrgId, VcdrInstances
+update-TypeData -TypeName "VMware.VCDRService.VCDRService" -DefaultDisplayPropertySet OrgId, NumberOfRegions
 update-TypeData -TypeName "VMware.VCDRService.VcdrSummary" -DefaultDisplayPropertySet Id, Url, Region
 
 New-Variable -Scope Script -Name DefaultVCDRService 
-New-Variable -Scope Script -option Constant -Name AWSRegions -value @('us-east-2', 'us-east-1', 'us-west-1', 'us-west-2', 'af-south-1', 'ap-east-1', 'ap-southeast-3', 'ap-south-1', 'ap-northeast-3', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2', 'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2', 'eu-south-1', 'eu-west-3', 'eu-north-1', 'me-south-1', 'sa-east-1')
+New-Variable -Scope Script -option Constant -Name AWSRegions -value @('us-east-2', 'us-east-1', 'us-west-1', 'us-west-2', 'af-south-1', 'ap-east-1', 'ap-southeast-3', 'ap-south-1', 'ap-northeast-3', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2', 'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2', 'eu-south-1', 'eu-west-3', 'eu-north-1', 'me-south-1', 'sa-east-1', 'unknow')
 New-Variable -Scope Script -name AwsActiveRegion -Value $AWSRegions
 New-Variable -Scope Script -Name PagingSize -Value 100
 
@@ -57,6 +57,8 @@ New-Variable -Scope Script -Name PagingSize -Value 100
         The tokne used to authenticate VMC
     .PARAMETER Region
         The Region set as default for any cmdlet operation
+    .PARAMETER Server
+        The Server set as default for any cmdlet operation
     .EXAMPLE
         $token="<my VMC TOKEN>"
             
@@ -79,25 +81,39 @@ New-Variable -Scope Script -Name PagingSize -Value 100
 Function Connect-VCDRService {
     [OutputType([VMware.VCDRService.VCDRService])]
     [CmdletBinding()]
-    Param( 
-        [Parameter( Mandatory = $true)] 
+    Param( [CmdletBinding(DefaultParameterSetName = 'Default')] 
+        [Parameter( Mandatory = $true, ParameterSetName = 'Default')] 
+        [Parameter( Mandatory = $true, ParameterSetName = 'Host')]
         [String]  $Token, 
-        [Parameter( Mandatory = $false)]
+        [Parameter( Mandatory = $false, ParameterSetName = 'Default')]
         [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region, 
+        
+        [Parameter( Mandatory = $false, ParameterSetName = 'Host')]
+        [Parameter( Mandatory = $false, ParameterSetName = 'Default')]
         [String] $cspBaseUrl ,
-        [String] $vcdrBackendUrl  
+        
+        [Parameter( Mandatory = $false, ParameterSetName = 'Default')]
+        [String] $vcdrBackendUrl,
+        
+        [Parameter( Mandatory = $true, ParameterSetName = 'Host')]
+        [String] $Server  
     ) 
     if ($Script:DefaultVCDRService) {
         if ($Script:DefaultVCDRService.CompareToken($Token)) {
             throw "Already connected to Org:" + $Script:DefaultVCDRService.OrgId + " . Use Disconnect-VCDRService to disconnect from this Org."
         }
         $Script:DefaultVCDRService.Disconnect
-    } 
-    [VMware.VCDRService.VCDRService] $VCDRServiceClient = New-Object VMware.VCDRService.VCDRService($Token, $cspBaseUrl, $vcdrBackendUrl) 
-    Set-Variable -Scope Script -name DefaultVCDRService -value $VCDRServiceClient
+    }   
+    if ($Server) {
+        [System.Uri] $serverUri = [System.Uri]"https://$Server"
+        [VMware.VCDRService.VCDRService] $VCDRServiceClient = New-Object VMware.VCDRService.VCDRService($Token, $serverUri, $cspBaseUrl) 
+    }
+    else {
+        [VMware.VCDRService.VCDRService] $VCDRServiceClient = New-Object VMware.VCDRService.VCDRService($Token, $cspBaseUrl, $vcdrBackendUrl)   
+    }
+    Set-Variable -Scope Script -name DefaultVCDRService -value $VCDRServiceClient 
     $Script:AwsActiveRegion = $VCDRServiceClient.GetActiveRegions();
-  
     return $VCDRServiceClient 
 }
 

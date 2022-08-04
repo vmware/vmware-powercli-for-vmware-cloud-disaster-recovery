@@ -52,19 +52,25 @@
     #>
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $true)][string] $token 
+    [Parameter(Mandatory = $true)][string] $Token ,
+    [Parameter(Mandatory = $false)][string] $Server
 )
 Set-StrictMode -Version 3
 $ErrorActionPreference = "Stop"
-
-Connect-VCDRService -Token   $token
+if ($Server) {
+    Connect-VCDRService -Token $Token -Server $Server
+}
+else {
+    Connect-VCDRService -Token $Token
+}
 Get-VCDRInstance
 
 $RecoverySDDC = Get-VCDRRecoverySDDC
 if ($RecoverySDDC) {
     Write-Host "Recovery SDDCs:" -NoNewline
     $RecoverySDDC | Format-Table
-} else {
+}
+else {
     Write-Host "No Recovery SDDCs configured"
 }
 $cloudFileSystems = Get-VCDRCloudFileSystem
@@ -93,7 +99,7 @@ if ($cloudFileSystems) {
             Write-Host "No Protection Groups"
         }
         $Vms = Get-VCDRProtectedVm -CloudFileSystem $cloudFileSystem
-        if ($Vms){
+        if ($Vms) {
             Write-Host "Virtual Machines:" -NoNewline
             $Snapshots | Format-Table -RepeatHeader
         }

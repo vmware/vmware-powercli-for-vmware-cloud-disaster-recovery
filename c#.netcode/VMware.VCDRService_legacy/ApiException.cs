@@ -29,17 +29,14 @@
 #pragma warning disable CS8601 // Possible null reference assignment.
 namespace VMware.VCDRService
 {
-
     using System;
     using System.Threading;
     using System.Net.Http;
     using System.Collections.Generic;
 
-
     public class VcdrException : System.Exception
     {
         public int StatusCode { get; private set; }
-
 
         public VcdrException(string message, int statusCode)
             : base(message + "\n\nStatus: " + statusCode + "\n")
@@ -53,21 +50,47 @@ namespace VMware.VCDRService
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
+    [System.CodeDom.Compiler.GeneratedCode(
+        "NSwag",
+        "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))"
+    )]
     public partial class ApiException : System.Exception
     {
         public int StatusCode { get; private set; }
 
         public string Response { get; private set; }
 
-        public System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> Headers { get; private set; }
-         
-        public ApiException(string message, int statusCode, string response, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.Exception innerException)
- 
-            : base(message + "\n\nStatus: " + statusCode + "\nResponse: \n" + ((response == null) ? "(null)" : response.Substring(0, response.Length >= 512 ? 512 : response.Length)), innerException)
+        public System.Collections.Generic.IReadOnlyDictionary<
+            string,
+            System.Collections.Generic.IEnumerable<string>
+        > Headers
+        { get; private set; }
+
+        public ApiException(
+            string message,
+            int statusCode,
+            string response,
+            System.Collections.Generic.IReadOnlyDictionary<
+                string,
+                System.Collections.Generic.IEnumerable<string>
+            > headers,
+            System.Exception innerException
+        )
+            : base(
+                message
+                    + "\n\nStatus: "
+                    + statusCode
+                    + "\nResponse: \n"
+                    + (
+                        (response == null)
+                            ? "(null)"
+                            : response.Substring(0, response.Length >= 512 ? 512 : response.Length)
+                    ),
+                innerException
+            )
         {
             StatusCode = statusCode;
-            Response = response; 
+            Response = response;
             Headers = headers;
         }
 
@@ -77,13 +100,25 @@ namespace VMware.VCDRService
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))")]
+    [System.CodeDom.Compiler.GeneratedCode(
+        "NSwag",
+        "13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v11.0.0.0))"
+    )]
     public partial class ApiException<TResult> : ApiException
     {
         public TResult Result { get; private set; }
 
-        public ApiException(string message, int statusCode, string response, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, TResult result, System.Exception innerException)
-            : base(message, statusCode, response, headers, innerException)
+        public ApiException(
+            string message,
+            int statusCode,
+            string response,
+            System.Collections.Generic.IReadOnlyDictionary<
+                string,
+                System.Collections.Generic.IEnumerable<string>
+            > headers,
+            TResult result,
+            System.Exception innerException
+        ) : base(message, statusCode, response, headers, innerException)
         {
             Result = result;
         }

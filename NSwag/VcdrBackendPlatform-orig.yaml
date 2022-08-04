@@ -28,19 +28,16 @@ paths:
       tags:
         - vcdr-org
       summary: Get all Deployments
-      description: Get all Deployments
-      operationId: getDeployments
+      description: Get all Deployments 
       parameters:
         - $ref: '#/components/parameters/orgIdQueryParam'
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Deployment'
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Deployment'
         '400':
           description: Bad Request
         '401':
@@ -49,38 +46,6 @@ paths:
           description: Forbidden
         '404':
           description: Not Found
-        '500':
-          description: Internal Server Error
-  /org/{org-id}/deployments:
-    get:
-      tags:
-        - vcdr-org
-      summary: Get all Deployments in given org
-      description: Get all Deployments in given org
-      operationId: getTenantDeployments
-      parameters:
-        - name: org-id
-          in: path
-          description: ORG identifier
-          required: true
-          example: 55f1a417-1c88-4bc0-aa38-5edb7ab6b47a
-          schema:
-            type: string  
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TenantDeployment'
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
         '500':
           description: Internal Server Error
    
@@ -108,11 +73,10 @@ components:
       name: org-id
       in: query
       description: ORG identifier
-      required: true
-      schema:
-        type: string
-        #format: uuid 
-        example: "55f1a417-1c88-4bc0-aa38-5edb7ab6b47a"
+      required: false
+      type: string 
+      format: uuid
+      example: "55f1a417-1c88-4bc0-aa38-5edb7ab6b47a"
       
   schemas:
     TenantOrchestratorConfig:

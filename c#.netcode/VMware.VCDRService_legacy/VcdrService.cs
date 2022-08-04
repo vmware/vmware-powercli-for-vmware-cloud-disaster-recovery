@@ -35,6 +35,8 @@ namespace VMware.VCDRService
     public class VcdrService  
     {
 
+        private const String UNKNOW_REGION = "unknow";
+
 
 
         public string OrgId
@@ -58,9 +60,13 @@ namespace VMware.VCDRService
         public string AccessToken { get; private set; }
          
 
-        private readonly VcdrBackendPlatform VcdrBackend;
+        private readonly VcdrBackendPlatform? VcdrBackend;
 
         private readonly HttpClient _httpClient;
+
+        public int NumberOfRegions { get; private set; }
+
+
         public VcdrService(String token, String? cspBaseUrl = null, String? vcdrBackendUrl = null)
         {
             if (Verbose) System.Console.WriteLine("Start Constructor");
@@ -86,19 +92,59 @@ namespace VMware.VCDRService
                 {
                     VcdrBackend.BaseUrl = vcdrBackendUrl;
                 }
+
                 VcdrDeployment = GetVCDRList(OrgId);
                 foreach (var item in VcdrDeployment)
                 {
                     var httpClient = new HttpClient();
                     httpClient.DefaultRequestHeaders.Add("x-da-access-token", AccessToken);
-                    VCDRServer server = new VCDRServer(httpClient, item);
-                    VcdrInstances.Add(item.Config.Cloud_provider.Region, server);
-                    if (ActiveVcdrInstance == null) ActiveVcdrInstance = server;
+                    VCDRServer vcdrServer = new VCDRServer(httpClient, new VcdrDeployment(item));
+                    VcdrInstances.Add(vcdrServer.Region, vcdrServer);
+                    if (ActiveVcdrInstance == null) ActiveVcdrInstance = vcdrServer;
                 }
+                NumberOfRegions = VcdrInstances.Count;
+
             }
             else throw new VcdrException("Connection failed", 1);
-            if (Verbose)                 System.Console.WriteLine("End Constructor"); 
+            if (Verbose) System.Console.WriteLine("End Constructor");
         }
+
+
+
+        public VcdrService(String token, Uri server, String? cspBaseUrl = null)
+        {
+            if (Verbose) System.Console.WriteLine("Start Constructor");
+            this.Token = token;
+            _httpClient = new HttpClient();
+            VcdrInstances = new Dictionary<string, VCDRServer>();
+            csp = new CloudServicePlatform(_httpClient);
+            if (!String.IsNullOrEmpty(cspBaseUrl))
+            {
+                csp.BaseUrl = cspBaseUrl;
+            }
+            var _accessCode = csp.GetApiTokenAuthorize(new GetAccessTokenByApiRefreshTokenRequest() { Refresh_token = this.Token });
+            if (_accessCode != null)
+            {
+                SetDefaultRequestHeaders(_accessCode.Access_token);
+                AccessToken = _accessCode.Access_token;
+                var tokenExpiration = _accessCode.Expires_in;
+                var renewal = TimeSpan.FromSeconds(tokenExpiration - tokenExpiration / 4);
+                timer = new Timer(callback: Callback, null, renewal, renewal);
+                TokenDetails = csp.GetApiTokenDetails(new GetApiTokenDetailsRequest() { TokenValue = token });
+                VcdrDeployment = new List<TenantDeployment>();
+
+                var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("x-da-access-token", AccessToken);
+                VCDRServer vcdrServer = new VCDRServer(httpClient, server, OrgId, UNKNOW_REGION);                
+                VcdrInstances.Add(vcdrServer.Region, vcdrServer);
+                ActiveVcdrInstance = vcdrServer;
+                NumberOfRegions = VcdrInstances.Count;
+
+            }
+            else throw new VcdrException("Connection failed", 1);
+            if (Verbose) System.Console.WriteLine("End Constructor");
+        }
+
 
         public void Disconnect()
         {
@@ -137,7 +183,11 @@ namespace VMware.VCDRService
 
         public VCDRServer SelectRegion(String region = "")
         {
-
+            if (String.IsNullOrEmpty (region) )
+            {
+                ActiveVcdrInstance = VcdrInstances.ElementAt(0).Value;
+                return ActiveVcdrInstance;
+            }
             if (VcdrInstances.ContainsKey(region))
             {
                 ActiveVcdrInstance = VcdrInstances[region];
@@ -145,12 +195,7 @@ namespace VMware.VCDRService
             }
             foreach (var item in VcdrDeployment)
             {
-                if (String.IsNullOrEmpty(region))
-                {
-                    ActiveVcdrInstance = VcdrInstances.ElementAt(0).Value;
-                    return ActiveVcdrInstance;
-                }
-                else if (item.Config.Cloud_provider.Region == region)
+              if (item.Config.Cloud_provider.Region == region)
                 {
                     ActiveVcdrInstance = VcdrInstances[region];
                     return ActiveVcdrInstance;
@@ -164,15 +209,26 @@ namespace VMware.VCDRService
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("csp-auth-token", accessToken);
         }
-
+         
+        /// <summary>
+        /// Get Active Region
+        /// </summary>
+        /// <returns></returns>
         public List<String> GetActiveRegions()
         {
             var result = new List<String>();
-            foreach (var item in VcdrDeployment)
+            if (VcdrDeployment.Count==0)
             {
-                if (item.State == DeploymentStatesEnum.READY)
+                result.Add(UNKNOW_REGION);
+            }
+            else
+            {
+                foreach (var item in VcdrDeployment)
                 {
-                    result.Add(item.Config.Cloud_provider.Region);
+                    if (item.State == DeploymentStatesEnum.READY)
+                    {
+                        result.Add(item.Config.Cloud_provider.Region);
+                    }
                 }
             }
             return result;
@@ -181,7 +237,7 @@ namespace VMware.VCDRService
         private List<TenantDeployment> GetVCDRList(String org)
         {
             var result = new List<TenantDeployment>();
-            var deployments = VcdrBackend.GetDeployments(org);
+            var deployments = VcdrBackend.GetTenantDeployments(org);
             foreach (var item in deployments)
             {
                 if (item.State == DeploymentStatesEnum.READY)
@@ -192,7 +248,7 @@ namespace VMware.VCDRService
             return result;
         }
       
-        public virtual TenantDeployment? GetOrchestrator(String region, String org = "")
+        public virtual Deployment? GetOrchestrator(String region, String org = "")
         {
             if (String.IsNullOrEmpty(org))
                 org = OrgId;

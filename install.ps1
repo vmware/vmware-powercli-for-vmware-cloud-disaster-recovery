@@ -45,29 +45,34 @@ else {
     $PSPaths = $ENV:PSModulePath -split ":"
 }
 if ($PSPaths.Count -ge 3) {
-    $InstallerPath = $(Get-ChildItem -Path $MyInvocation.MyCommand.Path).DirectoryName
-    if($InstallerPath -is [system.array]){ $InstallerPath=$InstallerPath[0] }
+    $BASEDIR = $PSScriptRoot
+    Write-Host "Starting local Install process"
+    Write-Host "Root Directory is: $PSScriptRoot"
+    Write-Host "#################################################################################"
+    Write-Host
+    $InstallerPath = join-path -Path $BASEDIR -ChildPath "publish"
     $vcdrSourcePath = join-path -Path $InstallerPath -ChildPath $CmdletName
     if ($Install) {
-        Write-Output "Installing for $install"
+        Write-Host "Installing for $install"
         if ($install -eq "CurrentUser") {
             $PSPath = join-path -Path  $PSPaths[0]  -ChildPath $CmdletName
         }
         else {
             $PSPath = join-path -Path  $PSPaths[1]  -ChildPath $CmdletName
         }
-        Write-Output "Checking if $PSPath already exist"
+        Write-Host "Checking if $PSPath already exist"
         if (Test-Path -Path $PSPath) {
-            Write-Output "$PSPath exist."
-            Write-Output "Installation failed`n"
-            Write-Output "Please run ./install.ps1 -uninstall $install"
+            Write-Host "$PSPath exist."
+            Write-Host "Installation failed"
+            Write-Host "Please run ./install.ps1 -uninstall $install"
         }
         else {
-            Write-Output "Installing CmdLets to $PSPath"
+            Write-Host "Installing CmdLets to $PSPath"
             copy-item -Path $vcdrSourcePath -Destination  $PSPath  -Recurse -force
-            Write-Output 'Done.`n'
-            Write-Output 'To start use: '
-            Write-Output 'Connect-VCDRServer -server "vcdr-xxx-yyy-zzz-kkk.app.vcdr.vmware.com" -token "<my VMC TOKEN>"'
+            Write-Host 'Done.'
+            Write-Host             
+            Write-Host 'To start use: '
+            Write-Host 'Connect-VCDRServer -server "vcdr-xxx-yyy-zzz-kkk.app.vcdr.vmware.com" -token "<my VMC TOKEN>"'
         }
     }
     elseif ($Uninstall) {
@@ -77,21 +82,24 @@ if ($PSPaths.Count -ge 3) {
         else {
             $PSPath = join-path -Path  $PSPaths[1]  -ChildPath $CmdletName
         }
-        Write-Output "Checking if $PSPath exist"
+        Write-Host "Checking if $PSPath exist"
         if (Test-Path -Path $PSPath) {
-            Write-Output "Removing CmdLets from $PSPath"
+            Write-Host "Removing CmdLets from $PSPath"
             Remove-Item $PSPath -Recurse -Force
-            Write-Output "Done"
+            Write-Host "Done"
+            Write-Host
         }
         else {
-            Write-Output "No $CmdletName CmdLets founds"
+            Write-Host "No $CmdletName CmdLets founds"
         }
-    }   elseif ($Update) {
-        & $InstallerPath\install.ps1 -Uninstall $Update
-        & $InstallerPath\install.ps1 -Install $Update
-        Write-Output "Update Done"
+    }
+    elseif ($Update) {
+        & $BASEDIR\install.ps1 -Uninstall $Update
+        & $BASEDIR\install.ps1 -Install $Update
+        Write-Host "Update Done"
     }
     else {
-        Write-Output "Usage ./install.ps1 [-Install LocalMachine|CurrentUser] | [-Uninstall LocalMachine|CurrentUser] | [-Update LocalMachine|CurrentUser]"
+        Write-Host "Usage ./install.ps1 [-Install LocalMachine|CurrentUser] | [-Uninstall LocalMachine|CurrentUser] | [-Update LocalMachine|CurrentUser]"
+        Write-Host
     }
 }

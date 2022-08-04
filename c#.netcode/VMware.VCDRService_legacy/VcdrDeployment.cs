@@ -24,44 +24,48 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-
-using System;
-
 namespace VMware.VCDRService
 {
-    public class IrrServer
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+
+    public class VcdrDeployment
     {
-        public IrrServer()
+        public String Region { get; set; }
+
+        public IrrServer Irr { get; set; }
+        public CloudProvidersEnum Provider { get; set; }
+
+        public string OrgId { get; set; }
+
+        public VcdrDeployment(TenantDeployment item)
         {
-            Ip = String.Empty;
-            Url = String.Empty;
-            Id = Guid.Empty;
-            Version = String.Empty;
-            Server = String.Empty;
+            Region = item.Config.Cloud_provider.Region;
+            Irr = new IrrServer
+            {
+                Server = new Uri(item.Config.Orchestrator.Url).Host,
+                Ip = item.Config.Orchestrator.Ip,
+                Url = item.Config.Orchestrator.Url,
+                Id = item.Id
+            };
+
+            OrgId = item.Org_id;
+            Provider = item.Config.Cloud_provider.Provider;
         }
 
-        public IrrServer(string ip, string url, Guid id, string version, string server)
+        public VcdrDeployment(Deployment item)
         {
-            Ip = ip;
-            Url = url;
-            Id = id;
-            Version = version;
-            Server = server;
+            Region = item.Config.Cloud_provider.Region;
+            Irr = new IrrServer
+            {
+                Server = new Uri(item.Config.Orchestrator.Url).Host,
+                Ip = item.Config.Orchestrator.Ip,
+                Url = item.Config.Orchestrator.Url,
+                Id = item.Id
+            };
+            OrgId = item.Org_id;
+            Provider = item.Config.Cloud_provider.Provider;
         }
-
-        public IrrServer(IrrServer src)
-        {
-            Ip = src.Ip;
-            Url = src.Url;
-            Id = src.Id;
-            Version = src.Version;
-            Server = src.Server;
-        }
-
-        public string Ip { get; set; }
-        public string Url { get; set; }
-        public Guid Id { get; set; }
-        public String Version { get; set; }
-        public string Server { get; set; }
     }
 }
