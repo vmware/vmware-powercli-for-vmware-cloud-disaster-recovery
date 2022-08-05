@@ -194,13 +194,8 @@ namespace VCDRTest
             {
                 switch (args[index])
                 {
-                    case "-server": 
-                        String u = args[index + 1];
-                        if (!u.StartsWith("https://"))
-                        {
-                            u = u.Insert(0, "https://");
-                        }
-                        server =new Uri( u);
+                    case "-server":  
+                        server = new UriBuilder("https", args[index + 1]).Uri;
                         break;
                     case "-env":
                         if (args[index + 1].Equals("production", StringComparison.OrdinalIgnoreCase))

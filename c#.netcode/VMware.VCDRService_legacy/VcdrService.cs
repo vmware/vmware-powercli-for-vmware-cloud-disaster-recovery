@@ -237,27 +237,35 @@ namespace VMware.VCDRService
         private List<TenantDeployment> GetVCDRList(String org)
         {
             var result = new List<TenantDeployment>();
-            var deployments = VcdrBackend.GetTenantDeployments(org);
-            foreach (var item in deployments)
+            if (VcdrBackend != null)
             {
-                if (item.State == DeploymentStatesEnum.READY)
+                var deployments = VcdrBackend.GetTenantDeployments(org);
+                foreach (var item in deployments)
                 {
-                    result.Add(item);
+                    if (item.State == DeploymentStatesEnum.READY)
+                    {
+                        result.Add(item);
+                    }
                 }
             }
             return result;
         }
       
-        public virtual Deployment? GetOrchestrator(String region, String org = "")
+        public virtual TenantDeployment? GetOrchestrator(String region, String org = "")
         {
             if (String.IsNullOrEmpty(org))
-                org = OrgId;
-            var deployments = VcdrBackend.GetDeployments(org);
-            foreach (var item in deployments)
             {
-                if (item.State == DeploymentStatesEnum.READY && item.Config.Cloud_provider.Region == region)
+                org = OrgId;
+            }
+            if (VcdrBackend != null)
+            {
+                var deployments = VcdrBackend.GetTenantDeployments(org);
+                foreach (var item in deployments)
                 {
-                    return item;
+                    if (item.State == DeploymentStatesEnum.READY && item.Config.Cloud_provider.Region == region)
+                    {
+                        return item;
+                    }
                 }
             }
             return null;

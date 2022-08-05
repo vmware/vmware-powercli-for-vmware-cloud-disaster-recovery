@@ -72,7 +72,7 @@ if ($PSPaths.Count -ge 3) {
             Write-Host 'Done.'
             Write-Host             
             Write-Host 'To start use: '
-            Write-Host 'Connect-VCDRServer -server "vcdr-xxx-yyy-zzz-kkk.app.vcdr.vmware.com" -token "<my VMC TOKEN>"'
+            Write-Host 'Connect-VCDRService   -token "<my VMC TOKEN>"'            
         }
     }
     elseif ($Uninstall) {

@@ -54,18 +54,6 @@ namespace VMware.VCDRService
             Provider = item.Config.Cloud_provider.Provider;
         }
 
-        public VcdrDeployment(Deployment item)
-        {
-            Region = item.Config.Cloud_provider.Region;
-            Irr = new IrrServer
-            {
-                Server = new Uri(item.Config.Orchestrator.Url).Host,
-                Ip = item.Config.Orchestrator.Ip,
-                Url = item.Config.Orchestrator.Url,
-                Id = item.Id
-            };
-            OrgId = item.Org_id;
-            Provider = item.Config.Cloud_provider.Provider;
-        }
+     
     }
 }

@@ -58,8 +58,14 @@ New-Variable -Scope Script -Name PagingSize -Value 100
     .PARAMETER Region
         The Region set as default for any cmdlet operation
     .PARAMETER Server
-        The Server set as default for any cmdlet operation
-    .EXAMPLE
+        The Server set as default for any cmdlet operation (alternative connection)
+    .PARAMETER cspBaseUrl
+        Specifies the IP address or the DNS name of the VMware managed cloud service. If not specified, the cmdlet assumes that you are connecting to the public commercial instance and the default value of
+        `vmc.vmware.com` is used
+    .PARAMETER vcdrBackendUrl
+        Specifies the IP address or the DNS name of the VMware managed disaster recovery cloud service. If not specified, the cmdlet assumes that you are connecting to the public commercial instance and the default value of
+        `vdp.vmware.com` is used
+    .EXAMPLE 
         $token="<my VMC TOKEN>"
             
         $VCDR=Connect-VCDRService -token $token
