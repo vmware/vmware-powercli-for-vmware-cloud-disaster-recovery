@@ -34,7 +34,9 @@
     .PARAMETER Version
         Define the CmdLets version. Default is the content of VERSION file
     .PARAMETER NuGetApiKey
-        Private Key to publish to PowerShell Gallery
+        Key to publish to PowerShell Gallery
+    .PARAMETER GitHubApiKey
+        Key to publish to Github
     .PARAMETER Publish
         Publish to PowerShell Gallery. If not specified will use the -whatif option
     .PARAMETER OpenApiFile
@@ -59,10 +61,29 @@
 Param(
   [Parameter(Mandatory = $false)] [string] $Version ,
   [Parameter(Mandatory = $false)] [string] $NuGetApiKey,
+  [Parameter(Mandatory = $false)] [string] $GitHubApiKey,
   [Parameter(Mandatory = $false)] [string] $OpenApiFile = "vcdr.yaml",
   [Parameter(Mandatory = $false)] [Switch] $Publish
     
 )
+if ($NuGetApiKey) {
+  $Module=get-module -name PowerShellGet
+  if ($Module  -and $Module.Version.Major -ge 2) {
+    Write-Host "PowerShellGet module installed."
+  }
+  else { 
+    throw "PowerShellGet module Version 2 or greater not installed. Please use 'Install-Module -Name PowerShellGet' and Retry"
+  }
+}
+
+if ($GitHubApiKey) {
+  if (get-module -name PowershellforGitHub) {
+    Write-Host "PowershellforGitHub module installed."
+  }
+  else {
+    throw "PowershellforGitHub module not installed. Please use 'Install-Module -Name PowerShellForGitHub' and Retry"
+  }
+}
 #Set-StrictMode -Version 3
 $ErrorActionPreference = "Stop"
 Write-Host "Starting Build process"
@@ -364,6 +385,19 @@ if ( $NuGetApiKey ) {
   }
 }
 
+
+if ($GitHubApiKey) {
+  Write-Output "Creating a new version on GitHub`n"
+  $RepositoryName = "vmware-powercli-for-vmware-cloud-disaster-recovery"
+  $RepositoryOwner = "vmware"
+  $secureString = ($GitHubApiKey | ConvertTo-SecureString -AsPlainText -Force)
+  $cred = New-Object System.Management.Automation.PSCredential "username is ignored", $secureString
+  Set-GitHubAuthentication -Credential $cred
+  if ($Publish) {
+    New-GitHubRelease  -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Tag $Version
+    New-GitHubReleaseAsset  -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Release $Version  -Path $DestZip
+  }
+}
 #end
 Write-Output "`nDone.`n"
 Write-Output "To install locally execute .\install.ps1 -Install CurrentUser`n"
