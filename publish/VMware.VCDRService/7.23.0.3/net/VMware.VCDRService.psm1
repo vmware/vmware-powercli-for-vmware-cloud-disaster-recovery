@@ -58,8 +58,14 @@ New-Variable -Scope Script -Name PagingSize -Value 100
     .PARAMETER Region
         The Region set as default for any cmdlet operation
     .PARAMETER Server
-        The Server set as default for any cmdlet operation
-    .EXAMPLE
+        The Server set as default for any cmdlet operation (alternative connection)
+    .PARAMETER cspBaseUrl
+        Specifies the IP address or the DNS name of the VMware managed cloud service. If not specified, the cmdlet assumes that you are connecting to the public commercial instance and the default value of
+        `vmc.vmware.com` is used
+    .PARAMETER vcdrBackendUrl
+        Specifies the IP address or the DNS name of the VMware managed disaster recovery cloud service. If not specified, the cmdlet assumes that you are connecting to the public commercial instance and the default value of
+        `vdp.vmware.com` is used
+    .EXAMPLE 
         $token="<my VMC TOKEN>"
             
         $VCDR=Connect-VCDRService -token $token
@@ -79,9 +85,9 @@ New-Variable -Scope Script -Name PagingSize -Value 100
 
 #>
 Function Connect-VCDRService {
-    [OutputType([VMware.VCDRService.VCDRService])]
-    [CmdletBinding()]
-    Param( [CmdletBinding(DefaultParameterSetName = 'Default')] 
+    [OutputType([VMware.VCDRService.VCDRService])] 
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
+    Param(   
         [Parameter( Mandatory = $true, ParameterSetName = 'Default')] 
         [Parameter( Mandatory = $true, ParameterSetName = 'Host')]
         [String]  $Token, 
@@ -232,8 +238,8 @@ Function Get-VCDRInstance {
 
 Function Set-DefaultVCDRInstance {
     [OutputType([VMware.VCDRService.VcdrSummary])]
-    param(
-        [CmdletBinding(DefaultParameterSetName = 'Default')] 
+    [CmdletBinding(DefaultParameterSetName = 'Default')] 
+    param(        
         [Parameter( Mandatory = $True)]
         [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region
@@ -815,6 +821,20 @@ Function Get-VCDRRecoverySddc {
     }
 } 
 
+ 
+Set-Alias -Name Connect-VCDRServer -Value Connect-VCDRService
+Set-Alias -Name Disconnect-VCDRServer -Value Disconnect-VCDRService 
+Export-ModuleMember -Function Connect-VCDRService -Alias Connect-VCDRServer 
+Export-ModuleMember -Function Disconnect-VCDRService -Alias Disconnect-VCDRServer
+Export-ModuleMember -Function Get-VCDRInstance 
+Export-ModuleMember -Function Get-DefaultVCDRInstance
+Export-ModuleMember -Function Set-DefaultVCDRInstance
+Export-ModuleMember -Function Get-VCDRCloudFileSystem
+Export-ModuleMember -Function Get-VCDRProtectedSite
+Export-ModuleMember -Function Get-VCDRProtectionGroup
+Export-ModuleMember -Function Get-VCDRSnapshot
+Export-ModuleMember -Function Get-VCDRProtectedVm
+Export-ModuleMember -Function Get-VCDRRecoverySddc
 Export-ModuleMember -Function Connect-VCDRService
 Export-ModuleMember -Function Disconnect-VCDRService
 Export-ModuleMember -Function Get-VCDRInstance 
@@ -826,6 +846,4 @@ Export-ModuleMember -Function Get-VCDRProtectionGroup
 Export-ModuleMember -Function Get-VCDRSnapshot
 Export-ModuleMember -Function Get-VCDRProtectedVm
 Export-ModuleMember -Function Get-VCDRRecoverySddc
-
-Set-Alias -Name Connect-VCDRServer -Value Connect-VCDRService
-Set-Alias -Name Disconnect-VCDRServer -Value Disconnect-VCDRService
+ 
