@@ -72,12 +72,12 @@ if ($NuGetApiKey) {
     Write-Host "PowerShellGet module installed."
   }
   else { 
-    throw "PowerShellGet module Version 2 or greater not installed. Please use 'Install-Module -Name PowerShellGet' and Retry"
+    throw "PowerShellGet module Version 2 or greater not installed. Please use 'Install-Module -Name PowerShellGet -force' and Retry"
   }
 }
 
 if ($GitHubApiKey) {
-  if (get-module -name PowershellforGitHub) {
+  if (Get-Module  -ListAvailable -name PowerShellForGitHub ) {
     Write-Host "PowershellforGitHub module installed."
   }
   else {
@@ -186,7 +186,7 @@ $TemplatePSD1 = @"
   CompanyName          = 'VMware, Inc.'
 
   # Copyright statement for this module
-  Copyright            = '2022(c) VMware Inc. All rights reserved.'
+  Copyright            = '$(get-date -UFormat "%y")(c) VMware Inc. All rights reserved.'
 
   # Description of the functionality provided by this module
   Description          = 'PowerCLI VMware Cloud Disaster Recovery module'
@@ -373,6 +373,7 @@ $DestZip = "$PUBLISH_FOLDER\VMware.VCDRService-" + $Version.replace( ".", "-") +
 Compress-Archive -Path @("$PUBLISH_FOLDER\VMware.VCDRService", ".\install.ps1", "LICENSE", "NOTICE", "open_source_licenses.txt") -DestinationPath $DestZip
 #endregion Archive
 
+#region NuGet
 if ( $NuGetApiKey ) {
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
   Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -WhatIf -Verbose
@@ -384,8 +385,9 @@ if ( $NuGetApiKey ) {
     Write-Output "To Publish run:`n  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -Verbose"
   }
 }
+#endregion NuGet
 
-
+#region GitHub
 if ($GitHubApiKey) {
   Write-Output "Creating a new version on GitHub`n"
   $RepositoryName = "vmware-powercli-for-vmware-cloud-disaster-recovery"
@@ -398,6 +400,7 @@ if ($GitHubApiKey) {
     New-GitHubReleaseAsset  -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Release $Version  -Path $DestZip
   }
 }
-#end
+#endregion GitHub
+
 Write-Output "`nDone.`n"
-Write-Output "To install locally execute .\install.ps1 -Install CurrentUser`n"
+Write-Output "To install locally for debug use, execute: .\install.ps1 -Install CurrentUser`n"

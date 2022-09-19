@@ -289,45 +289,45 @@ Function Get-DefaultVCDRInstance {
  
  
 <#
-        .SYNOPSIS
-            List of cloud file systems
-        .DESCRIPTION
-            Get a list of any deployed cloud file systems in your VMware Cloud DR organization with details.
-        .PARAMETER Region
-            Specifies the region on which you want to run the cmdlet. If no value is provided to this parameter, the command runs on the default region.
-        .PARAMETER Name
-           The name of the Cloud File System
-        .PARAMETER Id
-            The identifier of the cloud file system.
+    .SYNOPSIS
+        List of cloud file systems
+    .DESCRIPTION
+        Get a list of any deployed cloud file systems in your VMware Cloud DR organization with details.
+    .PARAMETER Region
+        Specifies the region on which you want to run the cmdlet. If no value is provided to this parameter, the command runs on the default region.
+    .PARAMETER Name
+        The name of the Cloud File System
+    .PARAMETER Id
+        The identifier of the cloud file system.
+    .EXAMPLE
+        Get-VCDRCloudFileSystem -Name "cloud-backup-1"
+
+        Description
+        -----------
+        This example shows recalling of any Cloud Files System that matches the given name
+    
         .EXAMPLE
-            Get-VCDRCloudFileSystem -Name "cloud-backup-1"
+        Get-VCDRCloudFileSystem -Region us-west-2
 
-            Description
-            -----------
-            This example shows recalling of any Cloud Files System that matches the given name
-        
-            .EXAMPLE
-            Get-VCDRCloudFileSystem -Region us-west-2
+        Description
+        -----------
+        This example shows recalling of any Cloud Files System residing in us-west-2 region
 
-            Description
-            -----------
-            This example shows recalling of any Cloud Files System residing in us-west-2 region
+    .EXAMPLE
+        Get-VCDRCloudFileSystem -Id "dbd913aa-6cbe-11ec-9871-0a3e56ef2005"
 
-        .EXAMPLE
-            Get-VCDRCloudFileSystem -Id "dbd913aa-6cbe-11ec-9871-0a3e56ef2005"
+        Description
+        -----------
+        This example shows recalling of any Cloud Files System that matches the given id
+    .NOTES
+        FunctionName    : Get-VCDRCloudFileSystem
+        Created by      : VMware
+        Modified by     : VMware
+        Date Modified   : 2022/08/01 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
+    .LINK
 
-            Description
-            -----------
-            This example shows recalling of any Cloud Files System that matches the given id
-        .NOTES
-            FunctionName    : Get-VCDRCloudFileSystem
-            Created by      : VMware
-            Modified by     : VMware
-            Date Modified   : 2022/08/01 
-            More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
-        .LINK
-
-    #>
+#>
 Function Get-VCDRCloudFileSystem {
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.CloudFileSystem[]])]
