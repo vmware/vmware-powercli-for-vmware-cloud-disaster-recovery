@@ -239,7 +239,8 @@ namespace VMware.VCDRService
             var result = new List<TenantDeployment>();
             if (VcdrBackend != null)
             {
-                var deployments = VcdrBackend.GetTenantDeployments(org);
+           //     VcdrBackend.ReadResponseAsString = true;
+                var deployments = VcdrBackend.GetVcdrDeployments(new Guid(org));
                 foreach (var item in deployments)
                 {
                     if (item.State == DeploymentStatesEnum.READY)
@@ -259,7 +260,7 @@ namespace VMware.VCDRService
             }
             if (VcdrBackend != null)
             {
-                var deployments = VcdrBackend.GetTenantDeployments(org);
+                var deployments = VcdrBackend.GetVcdrDeployments(new Guid(org));
                 foreach (var item in deployments)
                 {
                     if (item.State == DeploymentStatesEnum.READY && item.Config.Cloud_provider.Region == region)

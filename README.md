@@ -6,7 +6,7 @@ PowerCLI for VCDR is a PowerShell module that abstracts the VMware Cloud Disaste
 The backend of these Cmdlets (VCDR API) is still in the beta phase, and as a consequence of that, this module is not currently supported by VMware and comes with no warranties, express or implied. Please test and validate its functionality before using this product in a production environment.
 
 **Requirement:**
-- Powershell at least 7.1.0: https://github.com/powershell/powershell
+- Powershell at least 7.2.0: https://github.com/powershell/powershell
 - Operative System supported - more info at https://github.com/dotnet/core/blob/main/release-notes/3.1/3.1-supported-os.md
 
 | Type | OS |
