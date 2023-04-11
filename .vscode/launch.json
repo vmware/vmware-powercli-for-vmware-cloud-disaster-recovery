@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PowerShell: Launch Current File",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+          //  "args": ["-token", "nd9jqRO4JjETD0tjT3yXiCSyjRdr2TvU9-XTpVQhMshzAg5UJTKnsfWZrg87Rt5d"]
+         // "args": ["-install", "currentuser "]
+          "args": ["-token", "7G5JBDMkhtMGUAjfE-HdRgNYzDTJh6-zdd70eWRu8PeU-1obukeDkT68QZwa5zSK" , "-Server","vcdr-44-238-239-230.app.vcdr.vmware.com","-vim"]
+        }
+    ]
+}

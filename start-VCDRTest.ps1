@@ -53,58 +53,83 @@
 [CmdletBinding()]
 Param(
     [Parameter(Mandatory = $true)][string] $Token ,
-    [Parameter(Mandatory = $false)][string] $Server
+    [Parameter(Mandatory = $false)][string] $Server,
+    [Parameter(Mandatory = $false)][Switch] $Vim
 )
 Set-StrictMode -Version 3
-$ErrorActionPreference = "Stop"
-if ($Server) {
+$ErrorActionPreference = 'Stop'
+if ($Server)
+{
     Connect-VCDRService -Token $Token -Server $Server
 }
-else {
+else
+{
     Connect-VCDRService -Token $Token
 }
 Get-VCDRInstance
 
 $RecoverySDDC = Get-VCDRRecoverySDDC
-if ($RecoverySDDC) {
-    Write-Host "Recovery SDDCs:" -NoNewline
+if ($RecoverySDDC)
+{
+    Write-Host 'Recovery SDDCs:' -NoNewline
     $RecoverySDDC | Format-Table
 }
-else {
-    Write-Host "No Recovery SDDCs configured"
+else
+{
+    Write-Host 'No Recovery SDDCs configured'
 }
 $cloudFileSystems = Get-VCDRCloudFileSystem
-if ($cloudFileSystems) {
-    foreach ($cloudFileSystem in $cloudFileSystems) {
+if ($cloudFileSystems)
+{
+    foreach ($cloudFileSystem in $cloudFileSystems)
+    {
         Write-Host "Cloud FileSystem: $($cloudFileSystem.Name)" 
         $cloudFileSystem | Format-Table
-        Write-Host "Protected Sites:" -NoNewline
+        Write-Host 'Protected Sites:' -NoNewline
         $ProtectedSites = Get-VCDRProtectedSite -CloudFileSystem $cloudFileSystem
         $ProtectedSites | Format-Table
 
-        $ProtectionGroups = Get-VCDRProtectionGroup  -CloudFileSystem $cloudFileSystem
-        if ($ProtectionGroups) {
-            Write-Host "Protection Groups:" -NoNewline
+        $ProtectionGroups = Get-VCDRProtectionGroup -CloudFileSystem $cloudFileSystem
+        if ($ProtectionGroups)
+        {
+            Write-Host 'Protection Groups:' -NoNewline
             $ProtectionGroups | Format-Table -RepeatHeader
-            $Snapshots = Get-VCDRSnapshot   -ProtectionGroups $ProtectionGroups
-            if ($Snapshots) {
-                Write-Host "Snapshots:" -NoNewline
+            if ($Vim)
+            {
+                Write-Host 'Protection Groups Virtual Machines:' 
+                $ProtectionGroups | Get-VmFromVCDR | Format-Table -RepeatHeader
+            }
+            $Snapshots = Get-VCDRSnapshot -ProtectionGroups $ProtectionGroups
+            if ($Snapshots)
+            {
+                Write-Host 'Snapshots:' -NoNewline
                 $Snapshots | Format-Table -RepeatHeader
             }
-            else {
-                Write-Host "No Snapshots"
+            else
+            {
+                Write-Host 'No Snapshots'
             }
         }
-        else {
-            Write-Host "No Protection Groups"
+        else
+        {
+            Write-Host 'No Protection Groups'
         }
         $Vms = Get-VCDRProtectedVm -CloudFileSystem $cloudFileSystem
-        if ($Vms) {
-            Write-Host "Virtual Machines:" -NoNewline
-            $Snapshots | Format-Table -RepeatHeader
+        if ($Vms)
+        {
+            Write-Host 'Virtual Machines:' -NoNewline
+            $Vms | Format-Table -RepeatHeader
+
+            if ($Vim)
+            {
+                Write-Host 'Virtual Machines (Vim type):' -NoNewline
+                $VimVms = $Vms | Get-VmFromVCDR -errorAction Continue
+                $VimVms | Format-Table -RepeatHeader
+            }
         }
-        else {
-            Write-Host "No Virtual Machines on this Cloud File System"
+        else
+        {
+            Write-Host 'No Virtual Machines on this Cloud File System'
         }
 
         Write-Host "`n********************`n"

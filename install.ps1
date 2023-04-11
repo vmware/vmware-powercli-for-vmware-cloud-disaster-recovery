@@ -53,8 +53,8 @@ if ($PSPaths.Count -ge 3) {
     $InstallerPath = join-path -Path $BASEDIR -ChildPath "publish"
     $vcdrSourcePath = join-path -Path $InstallerPath -ChildPath $CmdletName
     if ($Install) {
-        Write-Host "Installing for $install"
-        if ($install -eq "CurrentUser") {
+        Write-Host "Installing for $Install"
+        if ($Install -eq "CurrentUser") {
             $PSPath = join-path -Path  $PSPaths[0]  -ChildPath $CmdletName
         }
         else {
@@ -64,7 +64,7 @@ if ($PSPaths.Count -ge 3) {
         if (Test-Path -Path $PSPath) {
             Write-Host "$PSPath exist."
             Write-Host "Installation failed"
-            Write-Host "Please run ./install.ps1 -uninstall $install"
+            Write-Host "Please run ./install.ps1 -uninstall $Install"
         }
         else {
             Write-Host "Installing CmdLets to $PSPath"

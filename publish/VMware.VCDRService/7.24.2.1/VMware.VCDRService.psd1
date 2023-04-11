@@ -52,7 +52,7 @@
   # FunctionsToExport    = @()
 
   # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-  CmdletsToExport      = @("Connect-VCDRService","Disconnect-VCDRService","Get-VCDRInstance","Get-DefaultVCDRInstance","Set-DefaultVCDRInstance", "Get-VCDRCloudFileSystem", "Get-VCDRProtectedSite", "Get-VCDRProtectionGroup", "Get-VCDRSnapshot", "Get-VCDRProtectedVm", "get-VCDRRecoverySddc")
+  CmdletsToExport      = @("Connect-VCDRService","Disconnect-VCDRService","Get-VCDRInstance","Get-DefaultVCDRInstance","Set-DefaultVCDRInstance", "Get-VCDRCloudFileSystem", "Get-VCDRProtectedSite", "Get-VCDRProtectionGroup", "Get-VCDRSnapshot", "Get-VCDRProtectedVm", "get-VCDRRecoverySddc","Get-VmFromVCDR","Remove-HFSFilter","Get-HFSFilter")
 
   # Variables to export from this module
   VariablesToExport    = '*'

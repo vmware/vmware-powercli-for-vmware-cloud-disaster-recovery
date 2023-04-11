@@ -25,27 +25,29 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-class AWSRegions : System.Management.Automation.IValidateSetValuesGenerator {
-    [String[]] GetValidValues() {  
+class AWSRegions : System.Management.Automation.IValidateSetValuesGenerator
+{
+    [String[]] GetValidValues()
+    {  
         return $Script:AwsActiveRegion
     }
 }
 
-update-TypeData -TypeName "VMware.VCDRService.ProtectionGroup" -DefaultDisplayPropertySet Name, Health, used_gib
-update-TypeData -TypeName "VMware.VCDRService.ProtectionGroupSnapshot" -DefaultDisplayPropertySet   Name , vm_count, failed_vm_snap_count, total_used_data_gib
-update-TypeData -TypeName "VMware.VCDRService.CloudFileSystem" -DefaultDisplayPropertySet   Name , Capacity_gib, Used_gib
-update-TypeData -TypeName "VMware.VCDRService.ProtectedSite" -DefaultDisplayPropertySet   Name , Type
-update-TypeData -TypeName "VMware.VCDRService.VCDRServer" -DefaultDisplayPropertySet Server , Version, OrgId, Region
-update-TypeData -TypeName "VMware.VCDRService.VmSummary" -DefaultDisplayPropertySet Name, Size, Vcdr_vm_id
-update-TypeData -TypeName "VMware.VCDRService.RecoverySddc"  -DefaultDisplayPropertySet Name, Region, Availability_zones
-update-TypeData -TypeName "VMware.VCDRService.VCDRService" -DefaultDisplayPropertySet OrgId, NumberOfRegions
-update-TypeData -TypeName "VMware.VCDRService.VcdrSummary" -DefaultDisplayPropertySet Id, Url, Region
+Update-TypeData -TypeName 'VMware.VCDRService.ProtectionGroup' -DefaultDisplayPropertySet Name, Health, used_gib
+Update-TypeData -TypeName 'VMware.VCDRService.ProtectionGroupSnapshot' -DefaultDisplayPropertySet Name , vm_count, failed_vm_snap_count, total_used_data_gib
+Update-TypeData -TypeName 'VMware.VCDRService.CloudFileSystem' -DefaultDisplayPropertySet Name , Capacity_gib, Used_gib
+Update-TypeData -TypeName 'VMware.VCDRService.ProtectedSite' -DefaultDisplayPropertySet Name , Type
+Update-TypeData -TypeName 'VMware.VCDRService.VCDRServer' -DefaultDisplayPropertySet Server , Version, OrgId, Region
+Update-TypeData -TypeName 'VMware.VCDRService.VmSummary' -DefaultDisplayPropertySet Name, Size, Vcdr_vm_id
+Update-TypeData -TypeName 'VMware.VCDRService.RecoverySddc' -DefaultDisplayPropertySet Name, Region, Availability_zones
+Update-TypeData -TypeName 'VMware.VCDRService.VCDRService' -DefaultDisplayPropertySet OrgId, NumberOfRegions
+Update-TypeData -TypeName 'VMware.VCDRService.VcdrSummary' -DefaultDisplayPropertySet Id, Url, Region
 
 New-Variable -Scope Script -Name DefaultVCDRService 
-New-Variable -Scope Script -option Constant -Name AWSRegions -value @('us-east-2', 'us-east-1', 'us-west-1', 'us-west-2', 'af-south-1', 'ap-east-1', 'ap-southeast-3', 'ap-south-1', 'ap-northeast-3', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2', 'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2', 'eu-south-1', 'eu-west-3', 'eu-north-1', 'me-south-1', 'sa-east-1', 'unknow')
-New-Variable -Scope Script -name AwsActiveRegion -Value $AWSRegions
+New-Variable -Scope Script -Option Constant -Name AWSRegions -Value @('us-east-2', 'us-east-1', 'us-west-1', 'us-west-2', 'af-south-1', 'ap-east-1', 'ap-southeast-3', 'ap-south-1', 'ap-northeast-3', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2', 'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2', 'eu-south-1', 'eu-west-3', 'eu-north-1', 'me-south-1', 'sa-east-1', 'unknow')
+New-Variable -Scope Script -Name AwsActiveRegion -Value $AWSRegions
 New-Variable -Scope Script -Name PagingSize -Value 100
-
+New-Variable -Scope Script -Option Constant -Name NotConnectedMsg -Value 'You are not currently connected to any servers. Please connect first using a Connect cmdlet.'
 
 <#
     .SYNOPSIS
@@ -84,7 +86,8 @@ New-Variable -Scope Script -Name PagingSize -Value 100
     .LINK
 
 #>
-Function Connect-VCDRService {
+Function Connect-VCDRService
+{
     [OutputType([VMware.VCDRService.VCDRService])] 
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     Param(   
@@ -105,21 +108,25 @@ Function Connect-VCDRService {
         [Parameter( Mandatory = $true, ParameterSetName = 'Host')]
         [String] $Server  
     ) 
-    if ($Script:DefaultVCDRService) {
-        if ($Script:DefaultVCDRService.CompareToken($Token)) {
-            throw "Already connected to Org:" + $Script:DefaultVCDRService.OrgId + " . Use Disconnect-VCDRService to disconnect from this Org."
+    if ($Script:DefaultVCDRService)
+    {
+        if ($Script:DefaultVCDRService.CompareToken($Token))
+        {
+            throw 'Already connected to Org:' + $Script:DefaultVCDRService.OrgId + ' . Use Disconnect-VCDRService to disconnect from this Org.'
         }
         $Script:DefaultVCDRService.Disconnect
     }   
-    if ($Server) {
+    if ($Server)
+    {
         [System.Uri] $serverUri = [System.Uri]"https://$Server"
         [VMware.VCDRService.VCDRService] $VCDRServiceClient = New-Object VMware.VCDRService.VCDRService($Token, $serverUri, $cspBaseUrl) 
     }
-    else {
+    else
+    {
         [VMware.VCDRService.VCDRService] $VCDRServiceClient = New-Object VMware.VCDRService.VCDRService($Token, $cspBaseUrl, $vcdrBackendUrl)   
     }
-    Set-Variable -Scope Script -name DefaultVCDRService -value $VCDRServiceClient 
-    $Script:AwsActiveRegion = $VCDRServiceClient.GetActiveRegions();
+    Set-Variable -Scope Script -Name DefaultVCDRService -Value $VCDRServiceClient 
+    $Script:AwsActiveRegion = $VCDRServiceClient.GetActiveRegions()
     return $VCDRServiceClient 
 }
 
@@ -149,11 +156,13 @@ Function Connect-VCDRService {
     .LINK
 
 #> 
-Function Disconnect-VCDRService {  
-    if ($Script:DefaultVCDRService) { 
+Function Disconnect-VCDRService
+{  
+    if ($Script:DefaultVCDRService)
+    { 
         $Script:DefaultVCDRService.Disconnect()
-        Remove-Variable -Scope Script -name DefaultVCDRService 
-        Set-Variable -Scope Script -name AwsActiveRegion -value $AWSRegions
+        Remove-Variable -Scope Script -Name DefaultVCDRService 
+        Set-Variable -Scope Script -Name AwsActiveRegion -Value $AWSRegions
     } 
 }
 
@@ -190,16 +199,24 @@ Function Disconnect-VCDRService {
 
 #> 
  
-Function Get-VCDRInstance { 
+Function Get-VCDRInstance
+{ 
     [OutputType([VMware.VCDRService.VcdrSummary[]])]
     param(
         [Parameter( Mandatory = $False)]
         [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region
     )
-    $result = [VMware.VCDRService.VcdrSummary[]]@()    
-    $result = $Script:DefaultVCDRService.GetVcdrInstances($Region)
-    return $result
+    if ($Script:DefaultVCDRService)
+    {
+        [VMware.VCDRService.VcdrSummary[]] $result = @()    
+        $result = $Script:DefaultVCDRService.GetVcdrInstances($Region)
+        return $result
+    }
+    else
+    {
+        throw $NotConnectedMsg
+    }
      
 }
 
@@ -236,7 +253,8 @@ Function Get-VCDRInstance {
 
 #> 
 
-Function Set-DefaultVCDRInstance {
+Function Set-DefaultVCDRInstance
+{
     [OutputType([VMware.VCDRService.VcdrSummary])]
     [CmdletBinding(DefaultParameterSetName = 'Default')] 
     param(        
@@ -244,9 +262,16 @@ Function Set-DefaultVCDRInstance {
         [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region
     )
-    $Server = $Script:DefaultVCDRService.SelectRegion($Region)
-    $result = New-Object -TypeName "VMware.VCDRService.VcdrSummary" -ArgumentList $Server    
-    return $result  
+    if ($Script:DefaultVCDRService)
+    {
+        $Server = $Script:DefaultVCDRService.SelectRegion($Region)
+        $result = New-Object -TypeName 'VMware.VCDRService.VcdrSummary' -ArgumentList $Server    
+        return $result  
+    }
+    else
+    {
+        throw $NotConnectedMsg
+    }
 }
 
 
@@ -277,11 +302,20 @@ Function Set-DefaultVCDRInstance {
     .LINK
 
 #> 
-Function Get-DefaultVCDRInstance {  
-    [OutputType([VMware.VCDRService.VcdrSummary])]
+Function Get-DefaultVCDRInstance
+{  
+    [OutputType([VMware.VCDRService.VcdrSummary])] 
     $Server = $Script:DefaultVCDRService.ActiveVcdrInstance
-    $result = New-Object -TypeName "VMware.VCDRService.VcdrSummary" -ArgumentList $Server   
-    return $result    
+    if ($Script:DefaultVCDRService)
+    { 
+        $result = New-Object -TypeName 'VMware.VCDRService.VcdrSummary' -ArgumentList $Server   
+        return $result    
+    }
+    else
+    {
+        throw $NotConnectedMsg
+    }
+
 }
 
   
@@ -328,50 +362,63 @@ Function Get-DefaultVCDRInstance {
     .LINK
 
 #>
-Function Get-VCDRCloudFileSystem {
+Function Get-VCDRCloudFileSystem
+{
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.CloudFileSystem[]])]
     Param( 
         [Parameter( Mandatory = $false)]
         [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region,
-        [Parameter( Mandatory = $false, ParameterSetName = "ByName", HelpMessage = "The name of the Cloud File System ")]
+        [Parameter( Mandatory = $false, ParameterSetName = 'ByName', HelpMessage = 'The name of the Cloud File System ')]
         [String]  $Name ,
-        [Parameter( Mandatory = $false, ParameterSetName = "ById", HelpMessage = "The identifier of the cloud file system.")]
+        [Parameter( Mandatory = $false, ParameterSetName = 'ById', HelpMessage = 'The identifier of the cloud file system.')]
         [String]  $Id
     )
-    Begin { 
-        if ($Script:DefaultVCDRService) { 
+    Begin
+    { 
+        if ($Script:DefaultVCDRService)
+        { 
             $Server = $Script:DefaultVCDRService.SelectRegion($Region)
         }
-        else {
-            throw "No Server connected"
+        else
+        {
+            throw $NotConnectedMsg
         } 
-        $result = [VMware.VCDRService.CloudFileSystem[]]@()
+        [VMware.VCDRService.CloudFileSystem[]]  $result = @()
     }
-    Process {
+    Process
+    {
         $cfs = $Server.GetCloudFileSystems()
-        if ($cfs.Cloud_file_systems) {
-            if ($name) {
+        if ($cfs.Cloud_file_systems)
+        {
+            if ($name)
+            {
                 $cf = $cfs.Cloud_file_systems | Where-Object { $_.Name -eq $Name }
-                if ($cf) {
+                if ($cf)
+                {
                     $result += $Server.GetCloudFileSystemDetails($cf.id)
                 }
             }
-            elseif ($id) {
+            elseif ($id)
+            {
                 $cf = $cfs.Cloud_file_systems | Where-Object { $_.Id -eq $id }
-                if ($cf) {
+                if ($cf)
+                {
                     $result += $Server.GetCloudFileSystemDetails($cf.id)
                 }
             }
-            else {
-                foreach ($cf in $cfs.Cloud_file_systems) {
+            else
+            {
+                foreach ($cf in $cfs.Cloud_file_systems)
+                {
                     $result += $Server.GetCloudFileSystemDetails($cf.Id)
                 }
             }
         }
     }
-    End {
+    End
+    {
         return $result
     }
 }
@@ -408,61 +455,75 @@ Function Get-VCDRCloudFileSystem {
 
     #>
 
-Function Get-VCDRProtectedSite {
+Function Get-VCDRProtectedSite
+{
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.ProtectedSite[]])]
     Param(
-        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Cloud FileSystem")]
+        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'Cloud FileSystem')]
         [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
-        [Parameter( Mandatory = $false, HelpMessage = "vCenter")]
+        [Parameter( Mandatory = $false, HelpMessage = 'vCenter')]
         [String[]]  $Vcenter ,
-        [Parameter( Mandatory = $false, HelpMessage = "Protection Group")]
+        [Parameter( Mandatory = $false, HelpMessage = 'Protection Group')]
         [String[]]  $ProtectionGroup     
 
     )
-    Begin {
-        if ($Script:DefaultVCDRService) {   
-            $result = [VMware.VCDRService.ProtectedSite[]]@()
+    Begin
+    {
+        if ($Script:DefaultVCDRService)
+        {   
+            [VMware.VCDRService.ProtectedSite[]] $result = @()
 
-            $protectedSitesFilterSpec = New-Object -TypeName  'VMware.VCDRService.ProtectedSitesFilterSpec'
-            $protectedSitesFilterSpec.Protection_group_ids = new-object -typename System.Collections.Generic.List[String]
-            $protectedSitesFilterSpec.Vcenter_ids = new-object -typename System.Collections.Generic.List[String]
+            $protectedSitesFilterSpec = New-Object -TypeName 'VMware.VCDRService.ProtectedSitesFilterSpec'
+            $protectedSitesFilterSpec.Protection_group_ids = New-Object -TypeName System.Collections.Generic.List[String]
+            $protectedSitesFilterSpec.Vcenter_ids = New-Object -TypeName System.Collections.Generic.List[String]
 
-            if ($ProtectionGroup) {
-                foreach ($item in $ProtectionGroup) {
+            if ($ProtectionGroup)
+            {
+                foreach ($item in $ProtectionGroup)
+                {
                     $protectedSitesFilterSpec.Protection_group_ids.Add($item)
                 }
             }
-            if ($Vcenter) {
-                foreach ($item in $Vcenter) {
+            if ($Vcenter)
+            {
+                foreach ($item in $Vcenter)
+                {
                     $protectedSitesFilterSpec.Vcenter_ids.Add($item)
                 }
             }
         }
-        else {
-            throw "No Server connected"
+        else
+        {
+            throw $NotConnectedMsg
         } 
     }
-    Process {
-        foreach ($Cfs in $CloudFileSystem) {
+    Process
+    {
+        foreach ($Cfs in $CloudFileSystem)
+        {
             $Server = $Cfs.Server 
             [String]   $Cursor = $Null
-            $protectedSites = [VMware.VCDRService.GetProtectedSitesResponse[]]@()
-            do {
+            [VMware.VCDRService.ProtectedSiteSummary[]]$protectedSites = @()
+            do
+            {
                 $protectedSitesResponse = $Server.GetProtectedSites($Cfs, $PagingSize, $protectedSitesFilterSpec, $Cursor)
-                if (! $protectedSitesResponse) {
+                if (! $protectedSitesResponse)
+                {
                     break
                 }
                 $protectedSites += $protectedSitesResponse.Protected_sites
                 $Cursor = $protectedSitesResponse.Cursor
             }  while ($Cursor -and $protectedSitesResponse.Protected_sites -gt 0 )
 
-            foreach ($ps in $protectedSites) {
+            foreach ($ps in $protectedSites)
+            {
                 $result += $Server.GetProtectedSiteDetails($Cfs, $ps.Id)
             }
         }
     }
-    End {
+    End
+    {
         return $result
     }
 }
@@ -499,58 +560,71 @@ Function Get-VCDRProtectedSite {
         .LINK
 
     #>
-Function Get-VCDRProtectionGroup {
+Function Get-VCDRProtectionGroup
+{
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.ProtectionGroup[]])]
     Param(
-        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Cloud FileSystem")]
+        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'Cloud FileSystem')]
         [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
-        [Parameter( Mandatory = $false, HelpMessage = "vCenter ID")]
+        [Parameter( Mandatory = $false, HelpMessage = 'vCenter ID')]
         [String[]]  $Vcenter ,
-        [Parameter( Mandatory = $false, HelpMessage = "Site ID")]
+        [Parameter( Mandatory = $false, HelpMessage = 'Site ID')]
         [String[]]  $Site  
     )
-    Begin { 
-        if ($Script:DefaultVCDRService) {  
-            $result = [VMware.VCDRService.ProtectionGroup[]]@()
+    Begin
+    { 
+        if ($Script:DefaultVCDRService)
+        {  
+            [VMware.VCDRService.ProtectionGroup[]]   $result = @()
 
-            $protectionGroupsFilterSpec = New-Object -TypeName  'VMware.VCDRService.ProtectionGroupsFilterSpec'
-            $protectionGroupsFilterSpec.Site_ids = new-object -typename System.Collections.Generic.List[String]
-            $protectionGroupsFilterSpec.Vcenter_ids = new-object -typename System.Collections.Generic.List[String]
+            $protectionGroupsFilterSpec = New-Object -TypeName 'VMware.VCDRService.ProtectionGroupsFilterSpec'
+            $protectionGroupsFilterSpec.Site_ids = New-Object -TypeName System.Collections.Generic.List[String]
+            $protectionGroupsFilterSpec.Vcenter_ids = New-Object -TypeName System.Collections.Generic.List[String]
 
-            if ($Site) {
-                foreach ($item in $Site) {
+            if ($Site)
+            {
+                foreach ($item in $Site)
+                {
                     $protectionGroupsFilterSpec.Site_ids.Add($item)
                 }
             }
-            if ($Vcenter) {
-                foreach ($item in $Vcenter) {
+            if ($Vcenter)
+            {
+                foreach ($item in $Vcenter)
+                {
                     $protectionGroupsFilterSpec.Vcenter_ids.Add($item)
                 }
             } 
         }
-        else {
-            throw "No Server connected"
+        else
+        {
+            throw $NotConnectedMsg
         }
     }
-    Process {
-        foreach ($Cfs in $CloudFileSystem) {            
+    Process
+    {
+        foreach ($Cfs in $CloudFileSystem)
+        {            
             $Server = $CloudFileSystem.Server 
-            $protectedGroups = [VMware.VCDRService.GetProtectionGroupsResponse[]]@()
+            [VMware.VCDRService.ProtectionGroupSummary[]] $protectedGroups = @()
             [String]   $Cursor = $Null
-            do {
+            do
+            {
                 $protectedGroupsResponse = $Server.GetProtectionGroups($Cfs, $PagingSize, $protectionGroupsFilterSpec, $Cursor)
                 if (!$protectedGroupsResponse.Protection_groups ) { break }
                 $protectedGroups += $protectedGroupsResponse.Protection_groups
                 $Cursor = $protectedGroupsResponse.Cursor
             }  while ($Cursor -and $protectedGroupsResponse.Protection_groups -gt 0 )
 
-            foreach ($ps in $protectedGroups) {
+            foreach ($ps in $protectedGroups)
+            {
                 $result += $Server.GetProtectionGroupDetails($Cfs, $ps.Id)
             }
         }  
     }
-    End {
+    End
+    {
         return $result
     }
 }
@@ -583,52 +657,63 @@ Function Get-VCDRProtectionGroup {
         .LINK
 
     #>
-Function Get-VCDRSnapshot {
+Function Get-VCDRSnapshot
+{
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.ProtectionGroupSnapshot[]])]
     Param(
-        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Protection Groups")]
+        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'Protection Groups')]
         [VMware.VCDRService.ProtectionGroup[] ]  $ProtectionGroups,
-        [Parameter( Mandatory = $false, HelpMessage = "Snapshot Id")]
+        [Parameter( Mandatory = $false, HelpMessage = 'Snapshot Id')]
         [String ]  $SnapshotID
     )
-    Begin { 
-        if ($Script:DefaultVCDRService) {  
-            $result = [VMware.VCDRService.ProtectionGroupSnapshot[]]@()
+    Begin
+    { 
+        if ($Script:DefaultVCDRService)
+        {  
+            [VMware.VCDRService.ProtectionGroupSnapshot[]]$result = @()
         }
-        else {
-            throw "No Server connected"
+        else
+        {
+            throw $NotConnectedMsg
         }
     }
-    Process {
+    Process
+    {
 
-        if ( $SnapshotID ) {
-            foreach ($ProtectionGroup in  $ProtectionGroups) {
+        if ( $SnapshotID )
+        {
+            foreach ($ProtectionGroup in  $ProtectionGroups)
+            {
                 $Server = $ProtectionGroup.Server
                 $result += $Server.GetProtectionGroupSnapshotDetails($ProtectionGroup, $SnapshotID)
             }
         }
-        else {
+        else
+        {
 
-            foreach ($ProtectionGroup in  $ProtectionGroups) {
-                $Server = $ProtectionGroup.Server
-                $ProtectionGroup.CloudFileSystem.Id
+            foreach ($ProtectionGroup in  $ProtectionGroups)
+            {
+                $Server = $ProtectionGroup.Server 
                 [String] $Cursor = $Null
                 $Snapshots = [VMware.VCDRService.GetProtectionGroupSnapshotsResponse[]]@()
-                do {
+                do
+                {
                     $protectionGroupSnapshotResponse = $Server.GetProtectionGroupSnapshots( $ProtectionGroup, $PagingSize, $Cursor)
                     if (!$protectionGroupSnapshotResponse) { break }
                     if (!$protectionGroupSnapshotResponse.Snapshots) { break }
                     $Cursor = $protectionGroupSnapshotResponse.Cursor
                     $Snapshots += $protectionGroupSnapshotResponse.Snapshots
                 }  while ($Cursor -and $protectionGroupSnapshotResponse.Snaphsots -gt 0 )
-                foreach ($ps in $Snapshots) {
+                foreach ($ps in $Snapshots)
+                {
                     $result += $Server.GetProtectionGroupSnapshotDetails($ProtectionGroup, $ps.Id)
                 }
             }
         }
     }
-    End {
+    End
+    {
         return $result
     }
 }
@@ -668,62 +753,77 @@ Function Get-VCDRSnapshot {
         .LINK
 
     #>
-Function Get-VCDRProtectedVm {
+Function Get-VCDRProtectedVm
+{
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.VmSummary[]])]
     Param(
-        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = "Cloud FileSystem")]
+        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'Cloud FileSystem')]
         [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
-        [Parameter( Mandatory = $false, HelpMessage = "vCenter ID")]
+        [Parameter( Mandatory = $false, HelpMessage = 'vCenter ID')]
         [String[]]  $Vcenter ,
-        [Parameter( Mandatory = $false, HelpMessage = "Site ID")]
+        [Parameter( Mandatory = $false, HelpMessage = 'Site ID')]
         [String[]]  $Site ,
-        [Parameter( Mandatory = $false, HelpMessage = "Protection Group ID")]
+        [Parameter( Mandatory = $false, HelpMessage = 'Protection Group ID')]
         [VMware.VCDRService.ProtectionGroup[]]  $ProtectionGroup ,
-        [Parameter( Mandatory = $false, HelpMessage = "Protection Group Snapshot ID")]
+        [Parameter( Mandatory = $false, HelpMessage = 'Protection Group Snapshot ID')]
         [VMware.VCDRService.ProtectionGroupSnapshot[]] $ProtectionGroupSnapshot 
     )
-    Begin {
-        if ($Script:DefaultVCDRService) {  
-            $result = [VMware.VCDRService.VmSummary[]]@()
+    Begin
+    {
+        if ($Script:DefaultVCDRService)
+        {  
+            [VMware.VCDRService.VmSummary[]]$result = @()
 
-            $VmsFilterSpec = New-Object -TypeName  'VMware.VCDRService.VmsFilterSpec'
-            $VmsFilterSpec.Site_ids = new-object -typename System.Collections.Generic.List[String]
-            $VmsFilterSpec.Vcenter_ids = new-object -typename System.Collections.Generic.List[String]
-            $VmsFilterSpec.Protection_group_snapshot_id = new-object -typename System.Collections.Generic.List[String]
-            $VmsFilterSpec.Protection_group_ids = new-object -typename System.Collections.Generic.List[String]
+            $VmsFilterSpec = New-Object -TypeName 'VMware.VCDRService.VmsFilterSpec'
+            $VmsFilterSpec.Site_ids = New-Object -TypeName System.Collections.Generic.List[String]
+            $VmsFilterSpec.Vcenter_ids = New-Object -TypeName System.Collections.Generic.List[String]
+            $VmsFilterSpec.Protection_group_snapshot_id = New-Object -TypeName System.Collections.Generic.List[String]
+            $VmsFilterSpec.Protection_group_ids = New-Object -TypeName System.Collections.Generic.List[String]
 
-            if ($Site) {
-                foreach ($item in $Site) {
+            if ($Site)
+            {
+                foreach ($item in $Site)
+                {
                     $VmsFilterSpec.Site_ids.Add($item)
                 }
             }
-            if ($Vcenter) {
-                foreach ($item in $Vcenter) {
+            if ($Vcenter)
+            {
+                foreach ($item in $Vcenter)
+                {
                     $VmsFilterSpec.Vcenter_ids.Add($item)
                 }
             }
-            if ($ProtectionGroup) {
-                foreach ($pg in $ProtectionGroup) {
+            if ($ProtectionGroup)
+            {
+                foreach ($pg in $ProtectionGroup)
+                {
                     $VmsFilterSpec.Protection_group_ids.Add($pg.id)
                 }
             }
 
-            if ($ProtectionGroupSnapshot) {
-                foreach ($pgs in $ProtectionGroupSnapshot) {
+            if ($ProtectionGroupSnapshot)
+            {
+                foreach ($pgs in $ProtectionGroupSnapshot)
+                {
                     $VmsFilterSpec.Protection_group_snapshot_id.Add($pgs.Id)
                 }
             }
         }
-        else {
-            throw "No Server connected"
+        else
+        {
+            throw $NotConnectedMsg
         }
     }
-    Process {
-        foreach ($Cfs in $CloudFileSystem) {  
+    Process
+    {
+        foreach ($Cfs in $CloudFileSystem)
+        {  
             $Server = $CloudFileSystem.Server 
             [String] $Cursor = $Null
-            do {
+            do
+            {
                 $protectedVirtualMachines = $Server.GetProtectedVirtualMachines($Cfs, $PagingSize, $VmsFilterSpec, $Cursor)
                 if (!$protectedVirtualMachines) { break }
                 if (!$protectedVirtualMachines.Vms ) { break }
@@ -732,7 +832,8 @@ Function Get-VCDRProtectedVm {
             }  while ($Cursor -and $protectedVirtualMachines.Vms.Count -gt 0 )
         } 
     }
-    End {
+    End
+    {
         return $result
     }
 }
@@ -773,51 +874,64 @@ Function Get-VCDRProtectedVm {
         .LINK
 
     #>
-Function Get-VCDRRecoverySddc {
+Function Get-VCDRRecoverySddc
+{
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.RecoverySddc[]])]
     Param(
         [Parameter( Mandatory = $false)]
         [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region,
-        [Parameter( Mandatory = $false, ParameterSetName = "ByName", HelpMessage = "The name of the Recovery SDDC ")]
+        [Parameter( Mandatory = $false, ParameterSetName = 'ByName', HelpMessage = 'The name of the Recovery SDDC ')]
         [String]  $Name ,
-        [Parameter( Mandatory = $false, ParameterSetName = "ById", HelpMessage = "The identifier of the Recovery SDDC.")]
+        [Parameter( Mandatory = $false, ParameterSetName = 'ById', HelpMessage = 'The identifier of the Recovery SDDC.')]
         [String]  $Id  
     )
-    Begin { 
-        if ($Script:DefaultVCDRService) { 
+    Begin
+    { 
+        if ($Script:DefaultVCDRService)
+        { 
             $Server = $Script:DefaultVCDRService.SelectRegion($Region)
         }
-        else {
-            throw "No Server connected"
+        else
+        {
+            throw $NotConnectedMsg
         } 
-        $result = [VMware.VCDRService.RecoverySddc[]]@()
+        [VMware.VCDRService.RecoverySddc[]] $result = @()
     }
-    Process {
+    Process
+    {
         $rSddcs = $Server.GetRecoverySddc()
-        if ($rSddcs.data) {
-            if ($name) {
+        if ($rSddcs.data)
+        {
+            if ($name)
+            {
                 $cf = $rSddcs.data | Where-Object { $_.Name -eq $Name }
-                if ($cf) {
+                if ($cf)
+                {
                     $result += $Server.GetRecoverySddcDetails($cf.id)
                 }
             }
-            elseif ($id) {
+            elseif ($id)
+            {
                 $cf = $rSddcs.data | Where-Object { $_.Id -eq $id }
-                if ($cf) {
+                if ($cf)
+                {
                     $result += $Server.GetRecoverySddcDetails($cf.id)
                 }
             }
-            else {
-                foreach ($cf in $rSddcs.data) {
+            else
+            {
+                foreach ($cf in $rSddcs.data)
+                {
                     $result += $Server.GetRecoverySddcDetails($cf.Id)
                 }
             }
         }
         return $result
     }
-    End {
+    End
+    {
     }
 } 
 

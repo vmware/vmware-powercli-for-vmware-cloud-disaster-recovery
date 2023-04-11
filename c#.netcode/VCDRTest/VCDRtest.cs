@@ -128,7 +128,7 @@ namespace VCDRTest
                         {
                             foreach (var vm in vms.Vms)
                             {
-                                Console.WriteLine("Name: " + vm.Name + " Size (MB): " + vm.Size * 1024F);
+                                Console.WriteLine("Name: " + vm.Name +" id:"+vm.Id.Id +" Size (MB): " + vm.Size * 1024F);
                             }
                         }
                         cursor = vms.Cursor;
