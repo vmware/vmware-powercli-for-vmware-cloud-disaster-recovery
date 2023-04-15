@@ -1,0 +1,163 @@
+<Type>
+  <Name>VMware.VCDRService.ProtectionGroup</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>Name</Name>
+            <Name>Health</Name>
+            <Name>used_gib</Name>
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+<Type>
+  <Name>VMware.VCDRService.ProtectionGroupSnapshot</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>Name</Name>
+            <Name>vm_count</Name>
+            <Name>failed_vm_snap_count</Name>
+            <Name>total_used_data_gib</Name>
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+<Type>
+  <Name>VMware.VCDRService.CloudFileSystem</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>Name</Name>
+            <Name>Capacity_gib</Name>
+            <Name>Used_gib</Name> 
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+<Type>
+  <Name>VMware.VCDRService.ProtectedSite</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>Name</Name>
+            <Name>Type</Name> 
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+<Type>
+  <Name>VMware.VCDRService.VCDRServer</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>Server</Name>
+            <Name>Version</Name>
+            <Name>OrgId</Name>
+            <Name>Region</Name>
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+<Type>
+  <Name>VMware.VCDRService.VmSummary</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>Name</Name>
+            <Name>Size</Name>
+            <Name>Vcdr_vm_id</Name> 
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+<Type>
+  <Name>VMware.VCDRService.RecoverySddc</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>Name</Name>
+            <Name>Region</Name>
+            <Name>Availability_zones</Name> 
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+<Type>
+  <Name>VMware.VCDRService.VCDRService</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>OrgId</Name>
+            <Name>NumberOfRegions</Name> 
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+<Type>
+  <Name>VMware.VCDRService.VcdrSummary</Name>
+  <Members>
+    <MemberSet>
+      <Name>PSStandardMembers</Name>
+      <Members>
+        <PropertySet>
+          <Name>DefaultDisplayPropertySet</Name>
+          <ReferencedProperties>
+            <Name>Id</Name>
+            <Name>Url</Name>
+            <Name>Region</Name> 
+          </ReferencedProperties>
+        </PropertySet>
+      </Members>
+    </MemberSet>
+  </Members>
+</Type>
+  

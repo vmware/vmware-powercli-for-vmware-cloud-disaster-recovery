@@ -62,48 +62,57 @@ Param(
   [Parameter(Mandatory = $false)] [string] $Version ,
   [Parameter(Mandatory = $false)] [string] $NuGetApiKey,
   [Parameter(Mandatory = $false)] [string] $GitHubApiKey,
-  [Parameter(Mandatory = $false)] [string] $OpenApiFile = "vcdr.yaml",
-  [Parameter(Mandatory = $false)] [Switch] $Publish
+  [Parameter(Mandatory = $false)] [string] $OpenApiFile = 'vcdr.yaml',
+  [Parameter(Mandatory = $false)] [Switch] $Publish,
+  [Parameter(Mandatory = $false)] [Switch] $Beta
+  
     
 )
-if ($NuGetApiKey) {
-  $Module=get-module -name PowerShellGet
-  if ($Module  -and $Module.Version.Major -ge 2) {
-    Write-Host "PowerShellGet module installed."
+if ($NuGetApiKey)
+{
+  $Module = Get-Module -Name PowerShellGet
+  if ($Module -and $Module.Version.Major -ge 2)
+  {
+    Write-Host 'PowerShellGet module installed.'
   }
-  else { 
+  else
+  { 
     throw "PowerShellGet module Version 2 or greater not installed. Please use 'Install-Module -Name PowerShellGet -force' and Retry"
   }
 }
 
-if ($GitHubApiKey) {
-  if (Get-Module  -ListAvailable -name PowerShellForGitHub ) {
-    Write-Host "PowershellforGitHub module installed."
+if ($GitHubApiKey)
+{
+  if (Get-Module -ListAvailable -Name PowerShellForGitHub )
+  {
+    Write-Host 'PowershellforGitHub module installed.'
   }
-  else {
+  else
+  {
     throw "PowershellforGitHub module not installed. Please use 'Install-Module -Name PowerShellForGitHub' and Retry"
   }
 }
 #Set-StrictMode -Version 3
-$ErrorActionPreference = "Stop"
-Write-Host "Starting Build process"
+$ErrorActionPreference = 'Stop'
+Write-Host 'Starting Build process'
 Write-Host "Root Directory is: $PSScriptRoot"
-Write-Host "#################################################################################"
+Write-Host '#################################################################################'
 Write-Host
 
-$NSWAG_FRAMEWORK = "NetCore31"
-$CONFIGURATION = "Release"
-$FRAMEWORK = "netcoreapp3.1"
-$LEGACYFRAMEWORK = "4.7"
-$PLATFORM = "AnyCPU"
+$NSWAG_FRAMEWORK = 'NetCore31'
+$CONFIGURATION = 'Release'
+$FRAMEWORK = 'netcoreapp3.1'
+$LEGACYFRAMEWORK = '4.7'
+$PLATFORM = 'AnyCPU'
 $BASEDIR = $PSScriptRoot
 
-if ([string]::IsNullOrEmpty($Version)) {
-  $Version = Get-Content -path $BASEDIR\VERSION
+if ([string]::IsNullOrEmpty($Version))
+{
+  $Version = Get-Content -Path $BASEDIR\VERSION
 }
-$VCDRSERVICE_DIRNAME = "VMware.VCDRService"
+$VCDRSERVICE_DIRNAME = 'VMware.VCDRService'
 $PUBLISH_FOLDER = "$BASEDIR\publish"
-$VCDRSERVICELEGACY_DIRNAME = "VMware.VCDRService_legacy"
+$VCDRSERVICELEGACY_DIRNAME = 'VMware.VCDRService_legacy'
 $VCDRSERVICE_SRC = "$BASEDIR\c#.netcode\$VCDRSERVICE_DIRNAME"
 $VCDRSERVICE_LEGACY_SRC = "$BASEDIR\c#.netcode\$VCDRSERVICELEGACY_DIRNAME"
 $VCDRSERVICE_BASEDIR = "$PUBLISH_FOLDER\VMware.VCDRService"
@@ -112,12 +121,14 @@ $VCDRSERVICE = "$VCDRSERVICE_BASEDIR\$VERSION"
 $VCDR_SWAG_DIR = "$BASEDIR\NSwag"
  
  
-if ( -not (Test-Path $PUBLISH_FOLDER)) {
+if ( -not (Test-Path $PUBLISH_FOLDER))
+{
   #PowerShell Create directory if not exists
   New-Item $PUBLISH_FOLDER -ItemType Directory
 }
-else {
-  remove-item  -path $PUBLISH_FOLDER\*.zip
+else
+{
+  Remove-Item -Path $PUBLISH_FOLDER\*.zip
 }
 
 # Create the C# client
@@ -126,7 +137,7 @@ else {
 Set-Location -Path $VCDR_SWAG_DIR
 & nswag run .\CloudServicePlatform.nswag /runtime:$NSWAG_FRAMEWORK
 & nswag run .\VcdrBackendPlatform.nswag /runtime:$NSWAG_FRAMEWORK
-& nswag run .\vcdr.nswag   /input:$OpenApiFile /runtime:$NSWAG_FRAMEWORK
+& nswag run .\vcdr.nswag /input:$OpenApiFile /runtime:$NSWAG_FRAMEWORK
 
  
 #endregion NSWAG
@@ -136,7 +147,7 @@ Set-Location -Path $VCDRSERVICE_SRC
 & dotnet build
 
 & msbuild -t:Rebuild -p:Configuration=$CONFIGURATION -p:Platform=$PLATFORM
-Copy-Item -path "$VCDRSERVICE_SRC\*.cs" -Destination $VCDRSERVICE_LEGACY_SRC -Verbose
+Copy-Item -Path "$VCDRSERVICE_SRC\*.cs" -Destination $VCDRSERVICE_LEGACY_SRC -Verbose
 Set-Location -Path $VCDRSERVICE_LEGACY_SRC
 & msbuild VMware.VCDRService_legacy.csproj /p:Configuration=$CONFIGURATION /p:Platform=$PLATFORM /p:TargetFrameworkVersion=$LEGACYFRAMEWORK -t:Rebuild
 Set-Location $BASEDIR
@@ -144,18 +155,20 @@ Set-Location $BASEDIR
 
 #Create Directories and copy files
 #region CopyFiles
-if (Test-Path -Path $VCDRSERVICE_BASEDIR) {
-  Remove-Item -path $VCDRSERVICE_BASEDIR -recurse -force
+if (Test-Path -Path $VCDRSERVICE_BASEDIR)
+{
+  Remove-Item -Path $VCDRSERVICE_BASEDIR -Recurse -Force
 }
 New-Item -Path $VCDRSERVICE -ItemType Directory
 New-Item -Path "$VCDRSERVICE\netcore" -ItemType Directory
 New-Item -Path "$VCDRSERVICE\net" -ItemType Directory
-Copy-Item -path "$VCDRSERVICE_SRC\bin\$CONFIGURATION\$FRAMEWORK\*.dll" -Destination "$VCDRSERVICE\netcore"
-Copy-Item -path "$VCDRSERVICE_LEGACY_SRC\bin\$CONFIGURATION\*.dll" -Destination "$VCDRSERVICE\net"
-Copy-Item -path "$VCDRSERVICE_PWSH_SOURCE\VMware.VCDRService.psm1" -Destination "$VCDRSERVICE\net"
-Copy-Item -path "$VCDRSERVICE_PWSH_SOURCE\VMware.VCDRService.psm1" -Destination "$VCDRSERVICE\netcore"
-Copy-Item -Path "$BASEDIR\LICENSE"  -Destination "$VCDRSERVICE"
-Copy-Item -Path "$BASEDIR\open_source_licenses.txt"  -Destination "$VCDRSERVICE"
+Copy-Item -Path "$VCDRSERVICE_SRC\bin\$CONFIGURATION\$FRAMEWORK\*.dll" -Destination "$VCDRSERVICE\netcore"
+Copy-Item -Path "$VCDRSERVICE_LEGACY_SRC\bin\$CONFIGURATION\*.dll" -Destination "$VCDRSERVICE\net"
+Copy-Item -Path "$VCDRSERVICE_PWSH_SOURCE\VMware.VCDRService.psm1" -Destination "$VCDRSERVICE\net"
+Copy-Item -Path "$VCDRSERVICE_PWSH_SOURCE\VMware.VCDRService.psm1" -Destination "$VCDRSERVICE\netcore"
+Copy-Item -Path "$VCDRSERVICE_PWSH_SOURCE\Types.ps1xml" -Destination "$VCDRSERVICE"
+Copy-Item -Path "$BASEDIR\LICENSE" -Destination "$VCDRSERVICE"
+Copy-Item -Path "$BASEDIR\open_source_licenses.txt" -Destination "$VCDRSERVICE"
 #endregion CopyFiles
 
 #region CommonDescriptor
@@ -171,6 +184,14 @@ $TemplateHeaderPSD1 = @"
 
 "@
 #remaining descriptor contents
+if ($Beta)
+{ 
+  $IsBeta = "# Prerelease string of this module `nPrerelease   = 'Beta'" 
+}
+else
+{   
+  $IsBeta = "# Prerelease string of this module `n#Prerelease   = 'Alpha'" 
+}
 $TemplatePSD1 = @"
 
   # Script module or binary module file associated with this manifest.
@@ -186,7 +207,7 @@ $TemplatePSD1 = @"
   CompanyName          = 'VMware, Inc.'
 
   # Copyright statement for this module
-  Copyright            = '$(get-date -UFormat "%y")(c) VMware Inc. All rights reserved.'
+  Copyright            = '$(Get-Date -UFormat '%Y')(c) VMware Inc. All rights reserved.'
 
   # Description of the functionality provided by this module
   Description          = 'PowerCLI VMware Cloud Disaster Recovery module'
@@ -194,11 +215,19 @@ $TemplatePSD1 = @"
   # Processor architecture (None, X86, Amd64) required by this module
   # ProcessorArchitecture = ''
 
+  # Modules that must be imported into the global environment prior to importing this module
+  RequiredModules = @(
+    @{"ModuleName"="VMware.VimAutomation.Sdk";"ModuleVersion"="12.7.0.20067606"}
+    @{"ModuleName"="VMware.VimAutomation.Common";"ModuleVersion"="12.7.0.20067789"}
+    @{"ModuleName"="VMware.Vim";"ModuleVersion"="7.0.3.19601056"}
+    @{"ModuleName"="VMware.VimAutomation.Core";"ModuleVersion"="12.7.0.20091293"}
+  )
+
   # Script files (.ps1) that are run in the caller's environment prior to importing this module.
   # ScriptsToProcess = @()
 
   # Type files (.ps1xml) to be loaded when importing this module
-  # TypesToProcess = @()
+  TypesToProcess = @("Types.ps1xml")
 
   # Format files (.ps1xml) to be loaded when importing this module
   # FormatsToProcess = @()
@@ -247,8 +276,7 @@ $TemplatePSD1 = @"
       # ReleaseNotes of this module
       ReleaseNotes = 'VMware Cloud Disaster Recovery PowerShell CmdLets'
 
-      # Prerelease string of this module
-      #Prerelease   = 'Alpha'
+      $IsBeta
 
       # Flag to indicate whether the module requires explicit user acceptance for install/update/save
       # RequireLicenseAcceptance = $false
@@ -301,7 +329,7 @@ $binaryModule = Import-Module -Name $binaryModulePath -PassThru
 $PSModule.OnRemove = {
    Remove-Module -ModuleInfo $binaryModule
 }
-'@| set-content  "$VCDRSERVICE\VMware.VCDRService.psm1"
+'@| Set-Content "$VCDRSERVICE\VMware.VCDRService.psm1"
 #endregion VMware.VCDRService.psm1
 
 #region CoreDescriptor
@@ -315,11 +343,11 @@ $VariableTemplateCorePSD1 = @"
 
   # Assemblies that must be loaded prior to importing this module
   RequiredAssemblies   = @("VMware.VCDRService.dll")
-
+  
   # Minimum version of the Windows PowerShell engine required by this module
   PowerShellVersion = '6.0.4'
 "@
-$TemplateHeaderPSD1 + $VariableTemplateCorePSD1 + $TemplatePSD1 | set-content  -path "$VCDRSERVICE\netcore\VMware.VCDRService.psd1"
+$TemplateHeaderPSD1 + $VariableTemplateCorePSD1 + $TemplatePSD1 | Set-Content -Path "$VCDRSERVICE\netcore\VMware.VCDRService.psd1"
 #endregion CoreDescriptor
 
 #region NetDescriptor
@@ -333,8 +361,7 @@ $VariableTemplateNetPSD1 = @"
 
   # Assemblies that must be loaded prior to importing this module
   RequiredAssemblies   = @("VMware.VCDRService.dll")
-
-
+ 
   # Minimum version of the Windows PowerShell engine required by this module
   PowerShellVersion = '5.1'
 
@@ -348,7 +375,7 @@ $VariableTemplateNetPSD1 = @"
   CLRVersion = '4.0'
 "@
 
-$TemplateHeaderPSD1 + $VariableTemplateNetPSD1 + $TemplatePSD1 | set-content  -path "$VCDRSERVICE\net\VMware.VCDRService.psd1"
+$TemplateHeaderPSD1 + $VariableTemplateNetPSD1 + $TemplatePSD1 | Set-Content -Path "$VCDRSERVICE\net\VMware.VCDRService.psd1"
 #endregion NetDescriptor
 
 #region NetSelectorDescriptor
@@ -365,39 +392,45 @@ $VariableTemplateCoreNetPSD1 = @"
 
 "@
 
-$TemplateHeaderPSD1 + $VariableTemplateCoreNetPSD1 + $TemplatePSD1 | set-content  "$VCDRSERVICE\VMware.VCDRService.psd1"
+$TemplateHeaderPSD1 + $VariableTemplateCoreNetPSD1 + $TemplatePSD1 | Set-Content "$VCDRSERVICE\VMware.VCDRService.psd1"
 #endregion NetSelectorDescriptor
 Set-Location $BASEDIR
 #region Archive
-$DestZip = "$PUBLISH_FOLDER\VMware.VCDRService-" + $Version.replace( ".", "-") + ".zip"
-Compress-Archive -Path @("$PUBLISH_FOLDER\VMware.VCDRService", ".\install.ps1", "LICENSE", "NOTICE", "open_source_licenses.txt") -DestinationPath $DestZip
+$DestZip = "$PUBLISH_FOLDER\VMware.VCDRService-" + $Version.replace( '.', '-') + '.zip'
+Compress-Archive -Path @("$PUBLISH_FOLDER\VMware.VCDRService", '.\install.ps1', 'LICENSE', 'NOTICE', 'open_source_licenses.txt') -DestinationPath $DestZip
 #endregion Archive
 
 #region NuGet
-if ( $NuGetApiKey ) {
+if ( $NuGetApiKey )
+{
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -WhatIf -Verbose
-  if ($Publish) { 
+  Publish-Module -Path $VCDRSERVICE -NuGetApiKey $NuGetApiKey -WhatIf -Verbose
+  if ($Publish)
+  { 
     Write-Output "Publish flag detected - Start publishing on PSGallery `n"
-    Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey  -Verbose
+    Publish-Module -Path $VCDRSERVICE -NuGetApiKey $NuGetApiKey -Verbose 
   }
-  else {
-    Write-Output "To Publish run:`n  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -Verbose"
+  else
+  {
+    Write-Output "To Publish run:`n  Publish-Module -Path $VCDRSERVICE  -NuGetApiKey $NuGetApiKey -Verbose "
   }
 }
 #endregion NuGet
 
 #region GitHub
-if ($GitHubApiKey) {
+if ($GitHubApiKey)
+{
+  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
   Write-Output "Creating a new version on GitHub`n"
-  $RepositoryName = "vmware-powercli-for-vmware-cloud-disaster-recovery"
-  $RepositoryOwner = "vmware"
+  $RepositoryName = 'vmware-powercli-for-vmware-cloud-disaster-recovery'
+  $RepositoryOwner = 'vmware'
   $secureString = ($GitHubApiKey | ConvertTo-SecureString -AsPlainText -Force)
-  $cred = New-Object System.Management.Automation.PSCredential "username is ignored", $secureString
+  $cred = New-Object System.Management.Automation.PSCredential 'username is ignored', $secureString
   Set-GitHubAuthentication -Credential $cred
-  if ($Publish) {
-    New-GitHubRelease  -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Tag $Version
-    New-GitHubReleaseAsset  -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Release $Version  -Path $DestZip
+  if ($Publish)
+  {
+    New-GitHubRelease -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Tag $Version
+    New-GitHubReleaseAsset -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Release $Version -Path $DestZip 
   }
 }
 #endregion GitHub

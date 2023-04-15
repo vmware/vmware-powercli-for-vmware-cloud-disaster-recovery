@@ -66,14 +66,15 @@ Param(
     [Parameter(Mandatory = $false)][Switch] $Vim
 )
  
-
+ 
  
 
 Set-StrictMode -Version 3
 $ErrorActionPreference = 'Stop' 
-if (   !  $Connect)
+if (    !  $Connect)
 {
-  #  Connect-VIServer -Server 10.24.132.72 -User 'administrator@vsphere.local' -Password 'Datrium@01'
+    Import-Module .\publish\VMware.VCDRService\7.26.0.1\VMware.VCDRService.psd1
+    Connect-VIServer -Server 10.24.132.72 -User 'administrator@vsphere.local' -Password 'Datrium@01'
     if ($Server)
     {
         Connect-VCDRService -Token $Token -Server $Server
@@ -84,9 +85,11 @@ if (   !  $Connect)
     }
 }
 
-$r=get-vm "Max*"
-Get-HFSFilter -VM $r
-Remove-HFSFilter -VM $r
+$r = Get-VM 'Max*'
+Get-HFSFilter -VM $r | Format-Table
+Remove-HFSFilter -VM $r -WhatIf
+$r = Get-VM -Name $r
+Get-HFSFilter -VM $r | Format-Table
 #$VimVms = Get-VM max-test-removeHFS
 #$res = Get-HfsFilter -VM $VimVms
 
@@ -114,10 +117,7 @@ if ($cloudFileSystems)
     {
         Write-Host "Cloud FileSystem: $($cloudFileSystem.Name)" 
         $cloudFileSystem | Format-Table
-        Write-Host 'Protected Sites:' -NoNewline
-        $ProtectedSites = Get-VCDRProtectedSite -CloudFileSystem $cloudFileSystem
-        $ProtectedSites | Format-Table
-    
+       
         #[VMware.VCDRService.ProtectionGroup[]]
         $ProtectionGroups = Get-VCDRProtectionGroup -CloudFileSystem $cloudFileSystem
         if ($ProtectionGroups)
@@ -126,35 +126,39 @@ if ($cloudFileSystems)
             Write-Host 'Protection Groups:' -NoNewline
             $ProtectionGroups | Format-Table -RepeatHeader
             $ProtectionGroups | Get-VmFromVCDR | Format-Table -RepeatHeader
-            $Snapshots = Get-VCDRSnapshot -ProtectionGroups $ProtectionGroups
-            if ($Snapshots)
+            foreach ($ProtectionGroup  in $ProtectionGroups)
             {
-                Write-Host 'Snapshots:' -NoNewline
-                $Snapshots | Format-Table -RepeatHeader 
+                $Snapshots = Get-VCDRSnapshot -ProtectionGroups $ProtectionGroup
+                if ($Snapshots)
+                {
+                    Write-Host $('Protection Group:{0} Status:{1}' -f $ProtectionGroup.Name , $ProtectionGroup.Health)
+                    Write-Host 'Snapshots:' -NoNewline
+                    $Snapshots | Format-Table -RepeatHeader 
                    
-            }
-            else
-            {
-                Write-Host 'No Snapshots'
+                }
+                else
+                {
+                    Write-Host 'No Snapshots'
+                }
             }
         }
         else
         {
             Write-Host 'No Protection Groups'
         }
+
+        Write-Host 'Protected Sites:' -NoNewline
+        $ProtectedSites = Get-VCDRProtectedSite -CloudFileSystem $cloudFileSystem -Vcenter $global:DefaultVIServers[0] -ProtectionGroup $ProtectionGroups
+        $ProtectedSites | Format-Table 
         #[VMware.VCDRService.VmSummary[]]
-         $Vms = Get-VCDRProtectedVm -CloudFileSystem $cloudFileSystem
+        $Vms = Get-VCDRProtectedVm -CloudFileSystem $cloudFileSystem
 
         [VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine[]]   $VimVms = $Vms | Get-VmFromVCDR -errorAction Continue
         
         if ($VimVms)
-        {
-
-
-
+        { 
             $VimVms | Format-Table -RepeatHeader
-            Write-Host 'Virtual Machines:' -NoNewline
-            $Snapshots | Format-Table -RepeatHeader
+            Write-Host 'Virtual Machines:' -NoNewline 
         }
         else
         {
