@@ -227,7 +227,7 @@ $TemplatePSD1 = @"
   # ScriptsToProcess = @()
 
   # Type files (.ps1xml) to be loaded when importing this module
-  TypesToProcess = @("Types.ps1xml")
+  #TypesToProcess = @("Types.ps1xml")
 
   # Format files (.ps1xml) to be loaded when importing this module
   # FormatsToProcess = @()
@@ -389,14 +389,17 @@ $VariableTemplateCoreNetPSD1 = @"
 
   # Minimum version of the Windows PowerShell engine required by this module
   PowerShellVersion = '5.1'
-
+  # Type files (.ps1xml) to be loaded when importing this module
+  TypesToProcess = @("Types.ps1xml")
+   
 "@
 
 $TemplateHeaderPSD1 + $VariableTemplateCoreNetPSD1 + $TemplatePSD1 | Set-Content "$VCDRSERVICE\VMware.VCDRService.psd1"
 #endregion NetSelectorDescriptor
 Set-Location $BASEDIR
 #region Archive
-$DestZip = "$PUBLISH_FOLDER\VMware.VCDRService-" + $Version.replace( '.', '-') + '.zip'
+if($Beta){$BetaName="-Beta"}else{$BetaName=""}
+$DestZip =$("$PUBLISH_FOLDER\VMware.VCDRService-{0}{1}.zip" -f $Version.replace( '.', '-'),$BetaName)
 Compress-Archive -Path @("$PUBLISH_FOLDER\VMware.VCDRService", '.\install.ps1', 'LICENSE', 'NOTICE', 'open_source_licenses.txt') -DestinationPath $DestZip
 #endregion Archive
 

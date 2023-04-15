@@ -73,7 +73,8 @@ Set-StrictMode -Version 3
 $ErrorActionPreference = 'Stop' 
 if (    !  $Connect)
 {
-    Import-Module .\publish\VMware.VCDRService\7.26.0.0\VMware.VCDRService.psd1
+    $Version = Get-Content -Path .\VERSION
+    Import-Module ".\publish\VMware.VCDRService\$Version\VMware.VCDRService.psd1"
     Connect-VIServer -Server 10.24.132.72 -User 'administrator@vsphere.local' -Password 'Datrium@01'
     if ($Server)
     {
