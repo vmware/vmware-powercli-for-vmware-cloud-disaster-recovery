@@ -1,6 +1,6 @@
 open_source_licenses.txt
 
-VMware PowerCLI for VMware Cloud Disaster Recovery 7.24.2.0 Beta
+VMware PowerCLI for VMware Cloud Disaster Recovery 7.23.0.0 Beta
 
 ======================================================================
 
@@ -27,13 +27,13 @@ of the license associated with each component.
 
 SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
 
-   >>> Newtonsoft.Json-13.0.3
+   >>> Newtonsoft.Json-12.0.3
 
 
 
 -------------------- SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES --------------------
 
-   >>> Newtonsoft.Json-13.0.3
+   >>> Newtonsoft.Json-12.0.3
 
        The MIT License (MIT)
 

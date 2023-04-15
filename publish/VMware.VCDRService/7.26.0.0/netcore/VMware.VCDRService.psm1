@@ -33,15 +33,18 @@ class AWSRegions : System.Management.Automation.IValidateSetValuesGenerator
     }
 }
 
-Update-TypeData -TypeName 'VMware.VCDRService.ProtectionGroup' -DefaultDisplayPropertySet Name, Health, used_gib
-Update-TypeData -TypeName 'VMware.VCDRService.ProtectionGroupSnapshot' -DefaultDisplayPropertySet Name , vm_count, failed_vm_snap_count, total_used_data_gib
-Update-TypeData -TypeName 'VMware.VCDRService.CloudFileSystem' -DefaultDisplayPropertySet Name , Capacity_gib, Used_gib
-Update-TypeData -TypeName 'VMware.VCDRService.ProtectedSite' -DefaultDisplayPropertySet Name , Type
-Update-TypeData -TypeName 'VMware.VCDRService.VCDRServer' -DefaultDisplayPropertySet Server , Version, OrgId, Region
-Update-TypeData -TypeName 'VMware.VCDRService.VmSummary' -DefaultDisplayPropertySet Name, Size, Vcdr_vm_id
-Update-TypeData -TypeName 'VMware.VCDRService.RecoverySddc' -DefaultDisplayPropertySet Name, Region, Availability_zones
-Update-TypeData -TypeName 'VMware.VCDRService.VCDRService' -DefaultDisplayPropertySet OrgId, NumberOfRegions
-Update-TypeData -TypeName 'VMware.VCDRService.VcdrSummary' -DefaultDisplayPropertySet Id, Url, Region
+class HFSFilter 
+{
+    [String ]$VendorId  
+    [String ]$DiskUuid  
+    [String ]$FileName 
+    HFSFilter (  $VendorId, $DiskUuid, $FileName)
+    {
+        $this.VendorId = $VendorId
+        $this.DiskUuid = $DiskUuid 
+        $this.FileName = $FileName
+    }
+} 
 
 New-Variable -Scope Script -Name DefaultVCDRService 
 New-Variable -Scope Script -Option Constant -Name AWSRegions -Value @('us-east-2', 'us-east-1', 'us-west-1', 'us-west-2', 'af-south-1', 'ap-east-1', 'ap-southeast-3', 'ap-south-1', 'ap-northeast-3', 'ap-northeast-2', 'ap-southeast-1', 'ap-southeast-2', 'ap-northeast-1', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2', 'eu-south-1', 'eu-west-3', 'eu-north-1', 'me-south-1', 'sa-east-1', 'unknow')
@@ -110,10 +113,10 @@ Function Connect-VCDRService
     ) 
     if ($Script:DefaultVCDRService)
     {
-        if ($Script:DefaultVCDRService.CompareToken($Token))
-        {
-            throw 'Already connected to Org:' + $Script:DefaultVCDRService.OrgId + ' . Use Disconnect-VCDRService to disconnect from this Org.'
-        }
+        #  if ($Script:DefaultVCDRService.CompareToken($Token))
+        #  {
+        #     throw 'Already connected to Org:' + $Script:DefaultVCDRService.OrgId + ' . Use Disconnect-VCDRService to disconnect from this Org.'
+        #   }
         $Script:DefaultVCDRService.Disconnect
     }   
     if ($Server)
@@ -209,9 +212,9 @@ Function Get-VCDRInstance
     )
     if ($Script:DefaultVCDRService)
     {
-        [VMware.VCDRService.VcdrSummary[]] $result = @()    
-        $result = $Script:DefaultVCDRService.GetVcdrInstances($Region)
-        return $result
+        [VMware.VCDRService.VcdrSummary[]] $Result = @()    
+        $Result = $Script:DefaultVCDRService.GetVcdrInstances($Region)
+        return $Result
     }
     else
     {
@@ -265,8 +268,8 @@ Function Set-DefaultVCDRInstance
     if ($Script:DefaultVCDRService)
     {
         $Server = $Script:DefaultVCDRService.SelectRegion($Region)
-        $result = New-Object -TypeName 'VMware.VCDRService.VcdrSummary' -ArgumentList $Server    
-        return $result  
+        $Result = New-Object -TypeName 'VMware.VCDRService.VcdrSummary' -ArgumentList $Server    
+        return $Result  
     }
     else
     {
@@ -308,8 +311,8 @@ Function Get-DefaultVCDRInstance
     $Server = $Script:DefaultVCDRService.ActiveVcdrInstance
     if ($Script:DefaultVCDRService)
     { 
-        $result = New-Object -TypeName 'VMware.VCDRService.VcdrSummary' -ArgumentList $Server   
-        return $result    
+        $Result = New-Object -TypeName 'VMware.VCDRService.VcdrSummary' -ArgumentList $Server   
+        return $Result    
     }
     else
     {
@@ -385,7 +388,7 @@ Function Get-VCDRCloudFileSystem
         {
             throw $NotConnectedMsg
         } 
-        [VMware.VCDRService.CloudFileSystem[]]  $result = @()
+        [VMware.VCDRService.CloudFileSystem[]]  $Result = @()
     }
     Process
     {
@@ -397,7 +400,7 @@ Function Get-VCDRCloudFileSystem
                 $cf = $cfs.Cloud_file_systems | Where-Object { $_.Name -eq $Name }
                 if ($cf)
                 {
-                    $result += $Server.GetCloudFileSystemDetails($cf.id)
+                    $Result += $Server.GetCloudFileSystemDetails($cf.id)
                 }
             }
             elseif ($id)
@@ -405,21 +408,21 @@ Function Get-VCDRCloudFileSystem
                 $cf = $cfs.Cloud_file_systems | Where-Object { $_.Id -eq $id }
                 if ($cf)
                 {
-                    $result += $Server.GetCloudFileSystemDetails($cf.id)
+                    $Result += $Server.GetCloudFileSystemDetails($cf.id)
                 }
             }
             else
             {
                 foreach ($cf in $cfs.Cloud_file_systems)
                 {
-                    $result += $Server.GetCloudFileSystemDetails($cf.Id)
+                    $Result += $Server.GetCloudFileSystemDetails($cf.Id)
                 }
             }
         }
     }
     End
     {
-        return $result
+        return $Result
     }
 }
 
@@ -462,17 +465,17 @@ Function Get-VCDRProtectedSite
     Param(
         [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'Cloud FileSystem')]
         [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
-        [Parameter( Mandatory = $false, HelpMessage = 'vCenter')]
-        [String[]]  $Vcenter ,
+        [Parameter( Mandatory = $false , HelpMessage = 'vCenter')]
+        [VMware.VimAutomation.Types.VIServer[]]   $Vcenter , 
         [Parameter( Mandatory = $false, HelpMessage = 'Protection Group')]
-        [String[]]  $ProtectionGroup     
+        [VMware.VCDRService.ProtectionGroupDetails[]]  $ProtectionGroup     
 
     )
     Begin
     {
         if ($Script:DefaultVCDRService)
         {   
-            [VMware.VCDRService.ProtectedSite[]] $result = @()
+            [VMware.VCDRService.ProtectedSite[]] $Result = @()
 
             $protectedSitesFilterSpec = New-Object -TypeName 'VMware.VCDRService.ProtectedSitesFilterSpec'
             $protectedSitesFilterSpec.Protection_group_ids = New-Object -TypeName System.Collections.Generic.List[String]
@@ -482,14 +485,14 @@ Function Get-VCDRProtectedSite
             {
                 foreach ($item in $ProtectionGroup)
                 {
-                    $protectedSitesFilterSpec.Protection_group_ids.Add($item)
+                    $protectedSitesFilterSpec.Protection_group_ids.Add($item.Id)
                 }
             }
             if ($Vcenter)
             {
                 foreach ($item in $Vcenter)
                 {
-                    $protectedSitesFilterSpec.Vcenter_ids.Add($item)
+                    $protectedSitesFilterSpec.Vcenter_ids.Add($item.InstanceUuid)
                 }
             }
         }
@@ -518,13 +521,13 @@ Function Get-VCDRProtectedSite
 
             foreach ($ps in $protectedSites)
             {
-                $result += $Server.GetProtectedSiteDetails($Cfs, $ps.Id)
+                $Result += $Server.GetProtectedSiteDetails($Cfs, $ps.Id)
             }
         }
     }
     End
     {
-        return $result
+        return $Result
     }
 }
 
@@ -562,13 +565,13 @@ Function Get-VCDRProtectedSite
     #>
 Function Get-VCDRProtectionGroup
 {
-    [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.ProtectionGroup[]])]
+    [CmdletBinding()]    
     Param(
         [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'Cloud FileSystem')]
         [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
-        [Parameter( Mandatory = $false, HelpMessage = 'vCenter ID')]
-        [String[]]  $Vcenter ,
+        [Parameter( Mandatory = $false , HelpMessage = 'vCenter')]
+        [VMware.VimAutomation.Types.VIServer[]]   $Vcenter , 
         [Parameter( Mandatory = $false, HelpMessage = 'Site ID')]
         [String[]]  $Site  
     )
@@ -576,12 +579,11 @@ Function Get-VCDRProtectionGroup
     { 
         if ($Script:DefaultVCDRService)
         {  
-            [VMware.VCDRService.ProtectionGroup[]]   $result = @()
+            [VMware.VCDRService.ProtectionGroup[]]   $Result = @()
 
             $protectionGroupsFilterSpec = New-Object -TypeName 'VMware.VCDRService.ProtectionGroupsFilterSpec'
             $protectionGroupsFilterSpec.Site_ids = New-Object -TypeName System.Collections.Generic.List[String]
-            $protectionGroupsFilterSpec.Vcenter_ids = New-Object -TypeName System.Collections.Generic.List[String]
-
+            $protectionGroupsFilterSpec.Vcenter_ids = New-Object -TypeName System.Collections.Generic.List[String] 
             if ($Site)
             {
                 foreach ($item in $Site)
@@ -593,7 +595,7 @@ Function Get-VCDRProtectionGroup
             {
                 foreach ($item in $Vcenter)
                 {
-                    $protectionGroupsFilterSpec.Vcenter_ids.Add($item)
+                    $protectionGroupsFilterSpec.Vcenter_ids.Add($item.InstanceUuid)
                 }
             } 
         }
@@ -619,13 +621,13 @@ Function Get-VCDRProtectionGroup
 
             foreach ($ps in $protectedGroups)
             {
-                $result += $Server.GetProtectionGroupDetails($Cfs, $ps.Id)
+                $Result += $Server.GetProtectionGroupDetails($Cfs, $ps.Id)
             }
         }  
     }
     End
     {
-        return $result
+        return $Result
     }
 }
 
@@ -659,8 +661,8 @@ Function Get-VCDRProtectionGroup
     #>
 Function Get-VCDRSnapshot
 {
-    [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.ProtectionGroupSnapshot[]])]
+    [CmdletBinding()]     
     Param(
         [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'Protection Groups')]
         [VMware.VCDRService.ProtectionGroup[] ]  $ProtectionGroups,
@@ -671,7 +673,7 @@ Function Get-VCDRSnapshot
     { 
         if ($Script:DefaultVCDRService)
         {  
-            [VMware.VCDRService.ProtectionGroupSnapshot[]]$result = @()
+            [VMware.VCDRService.ProtectionGroupSnapshot[]]$Result = @()
         }
         else
         {
@@ -686,7 +688,7 @@ Function Get-VCDRSnapshot
             foreach ($ProtectionGroup in  $ProtectionGroups)
             {
                 $Server = $ProtectionGroup.Server
-                $result += $Server.GetProtectionGroupSnapshotDetails($ProtectionGroup, $SnapshotID)
+                $Result += $Server.GetProtectionGroupSnapshotDetails($ProtectionGroup, $SnapshotID)
             }
         }
         else
@@ -707,14 +709,14 @@ Function Get-VCDRSnapshot
                 }  while ($Cursor -and $protectionGroupSnapshotResponse.Snaphsots -gt 0 )
                 foreach ($ps in $Snapshots)
                 {
-                    $result += $Server.GetProtectionGroupSnapshotDetails($ProtectionGroup, $ps.Id)
+                    $Result += $Server.GetProtectionGroupSnapshotDetails($ProtectionGroup, $ps.Id)
                 }
             }
         }
     }
     End
     {
-        return $result
+        return $Result
     }
 }
 
@@ -755,13 +757,13 @@ Function Get-VCDRSnapshot
     #>
 Function Get-VCDRProtectedVm
 {
-    [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.VmSummary[]])]
+    [CmdletBinding()] 
     Param(
         [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'Cloud FileSystem')]
         [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem,
-        [Parameter( Mandatory = $false, HelpMessage = 'vCenter ID')]
-        [String[]]  $Vcenter ,
+        [Parameter( Mandatory = $false , HelpMessage = 'vCenter')]
+        [VMware.VimAutomation.Types.VIServer[]]   $Vcenter , 
         [Parameter( Mandatory = $false, HelpMessage = 'Site ID')]
         [String[]]  $Site ,
         [Parameter( Mandatory = $false, HelpMessage = 'Protection Group ID')]
@@ -773,7 +775,7 @@ Function Get-VCDRProtectedVm
     {
         if ($Script:DefaultVCDRService)
         {  
-            [VMware.VCDRService.VmSummary[]]$result = @()
+            [VMware.VCDRService.VmSummary[]]$Result = @()
 
             $VmsFilterSpec = New-Object -TypeName 'VMware.VCDRService.VmsFilterSpec'
             $VmsFilterSpec.Site_ids = New-Object -TypeName System.Collections.Generic.List[String]
@@ -792,7 +794,7 @@ Function Get-VCDRProtectedVm
             {
                 foreach ($item in $Vcenter)
                 {
-                    $VmsFilterSpec.Vcenter_ids.Add($item)
+                    $VmsFilterSpec.Vcenter_ids.Add($item.InstanceUuid)
                 }
             }
             if ($ProtectionGroup)
@@ -827,14 +829,14 @@ Function Get-VCDRProtectedVm
                 $protectedVirtualMachines = $Server.GetProtectedVirtualMachines($Cfs, $PagingSize, $VmsFilterSpec, $Cursor)
                 if (!$protectedVirtualMachines) { break }
                 if (!$protectedVirtualMachines.Vms ) { break }
-                $result += $protectedVirtualMachines.Vms
+                $Result += $protectedVirtualMachines.Vms
                 $Cursor = $protectedVirtualMachines.Cursor
             }  while ($Cursor -and $protectedVirtualMachines.Vms.Count -gt 0 )
         } 
     }
     End
     {
-        return $result
+        return $Result
     }
 }
 
@@ -876,15 +878,15 @@ Function Get-VCDRProtectedVm
     #>
 Function Get-VCDRRecoverySddc
 {
-    [CmdletBinding(DefaultParameterSetName = 'Default')]
     [OutputType([VMware.VCDRService.RecoverySddc[]])]
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
     Param(
         [Parameter( Mandatory = $false)]
         [ValidateSet([AWSRegions], ErrorMessage = "Value '{0}' is not a valid region. Try one of: {1}")]
         [String] $Region,
-        [Parameter( Mandatory = $false, ParameterSetName = 'ByName', HelpMessage = 'The name of the Recovery SDDC ')]
+        [Parameter( Mandatory = $true, ParameterSetName = 'ByName', HelpMessage = 'The name of the Recovery SDDC ')]
         [String]  $Name ,
-        [Parameter( Mandatory = $false, ParameterSetName = 'ById', HelpMessage = 'The identifier of the Recovery SDDC.')]
+        [Parameter( Mandatory = $true, ParameterSetName = 'ById', HelpMessage = 'The identifier of the Recovery SDDC.')]
         [String]  $Id  
     )
     Begin
@@ -897,7 +899,7 @@ Function Get-VCDRRecoverySddc
         {
             throw $NotConnectedMsg
         } 
-        [VMware.VCDRService.RecoverySddc[]] $result = @()
+        [VMware.VCDRService.RecoverySddc[]] $Result = @()
     }
     Process
     {
@@ -909,7 +911,7 @@ Function Get-VCDRRecoverySddc
                 $cf = $rSddcs.data | Where-Object { $_.Name -eq $Name }
                 if ($cf)
                 {
-                    $result += $Server.GetRecoverySddcDetails($cf.id)
+                    $Result += $Server.GetRecoverySddcDetails($cf.id)
                 }
             }
             elseif ($id)
@@ -917,23 +919,318 @@ Function Get-VCDRRecoverySddc
                 $cf = $rSddcs.data | Where-Object { $_.Id -eq $id }
                 if ($cf)
                 {
-                    $result += $Server.GetRecoverySddcDetails($cf.id)
+                    $Result += $Server.GetRecoverySddcDetails($cf.id)
                 }
             }
             else
             {
                 foreach ($cf in $rSddcs.data)
                 {
-                    $result += $Server.GetRecoverySddcDetails($cf.Id)
+                    $Result += $Server.GetRecoverySddcDetails($cf.Id)
                 }
             }
         }
-        return $result
+        return $Result
     }
     End
     {
     }
 } 
+
+
+
+<#
+    .SYNOPSIS
+        This cmdlet convert virtual machine VCDR object to VimAutomation.
+    .DESCRIPTION
+         This cmdlet convert virtual machine VCDR object to VimAutomation.   
+    .PARAMETER VM
+        The Virtual Machines object to convert
+    .EXAMPLE
+        $cloudFileSystem=Get-VCDRCloudFileSystem -name "cloud-backup-1"
+        $Vms=Get-VCDRProtectedVm  -CloudFileSystem $cloudFileSystem 
+        $VimVms = Get-VmFromVCDR -VM $Vms -errorAction Continue
+        Disconnect-VCDRService   
+
+        Description
+        -----------
+        This example convert any VMs managed by the $cloudFileSystem to a standard Vim VM
+
+
+    .NOTES
+        FunctionName    : Get-VmFromVCDR
+        Created by      : VMware
+        
+        Modified by     : VMware
+        Date Modified   : 2023/04/10 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
+    .LINK
+
+#>
+function Get-VmFromVCDR
+{
+    [OutputType([VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine[]])]
+    [CmdletBinding(DefaultParameterSetName = 'ProtectionGroup')]     
+    param (
+        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'VCDR Protected Vms', ParameterSetName = 'ProtectionGroup')][VMware.VCDRService.ProtectionGroup[]]  $ProtectionGroup,
+        [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'VCDR Protected Vms', ParameterSetName = 'Vm')] [VMware.VCDRService.VmSummary[]] $Vm 
+    ) 
+    Begin
+    { 
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine[]] $Result = @()
+        $hash = @{}
+    }
+    Process
+    {
+        if ($global:DefaultVIServers)
+        {
+            if ($ProtectionGroup)
+            {
+                foreach ($PrGroup in $ProtectionGroup)
+                {
+                    foreach ($Mspec in $PrGroup.Members_specs)
+                    {
+                        foreach ($Folder in $Mspec.Vcenter_folder_paths)
+                        {
+                            $FolderParts = $Folder.split('/')
+                            $Parent = Get-Datacenter($FolderParts[0])
+                            for ($i = 2; $i -lt $FolderParts.Count ; $i++)
+                            {
+                                $Parent = Get-Folder -Name $FolderParts[$i] -Location $Parent 
+                            }
+                            $Result += Get-VM -Location $Parent -Server $Mspec.Vcenter_id
+                        }
+                        foreach ($vmname in $Mspec.Vcenter_vm_name_patterns)
+                        { 
+                            $Result += Get-VM -Server $Mspec.Vcenter_id -Name $vmname
+                        }
+
+                        foreach ($vmTag in $Mspec.Vcenter_tags)
+                        { 
+                            $Tag = Get-Tag -Server $Mspec.Vcenter_id -Name $vmTag.Tag_name -Category $vmTag.Category_name
+                            $Result += Get-VM -Server $Mspec.Vcenter_id -Tag $Tag
+                        }
+                    }
+                }
+            }
+            if ($Vm)
+            { 
+                foreach ($lvm in $Vm)
+                {
+                    $NotFound = $true
+                    for ($i = 0; $i -lt $global:DefaultVIServers.Count ; $i++)
+                    {
+    
+                        if ($global:DefaultVIServers[$i].InstanceUuid -eq $lvm.Id.Vcenter_id)
+                        {
+                            $hash[$i] += @($lvm.Id.Id)
+                            $NotFound = $false
+                            break 
+                        } 
+                    }
+                    if ($NotFound -and $ErrorActionPreference -ne 'Continue')
+                    {
+                        throw "Please connect vCenter id:$($lvm.Id.Vcenter_id) using Connect-VIServer"
+                    }
+                }  
+            }
+        }
+        else
+        {
+            throw 'Please connect to vCenter using Connect-VIServer'
+        }
+    }
+    End
+    { 
+        if ($Vm)
+        {
+            for ($i = 0; $i -lt $global:DefaultVIServers.Count ; $i++)
+            { 
+                $Result += Get-VM -Server $global:DefaultVIServers[$i] -Id $hash[$i]
+            }  
+        }
+        return $Result 
+    }
+} 
+
+
+
+
+<#
+    .SYNOPSIS
+        This cmdlet check if a virtual machine has the HFS filter(LWD)
+    .DESCRIPTION
+              This cmdlet check if a virtual machine has the HFS filter(LWD).  
+    .PARAMETER VM
+        The Virtual Machines object to check
+    .PARAMETER CloudFileSystem
+        Unique identifier of an individual cloud file system. Use the cloud file system ID of the cloud file system for which you want to get a list of HFS
+    .EXAMPLE
+        $cloudFileSystem=Get-VCDRCloudFileSystem -name "cloud-backup-1"
+        $Vm=Get-VM -name "test"
+        Get-HFSFilter -VM $VM
+
+        Description
+        -----------
+        This example return any HFS filter applied to the VM  
+
+    .NOTES
+        FunctionName    : Get-HFSFilter
+        Created by      : VMware
+        
+        Modified by     : VMware
+        Date Modified   : 2023/04/10 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
+    .LINK
+
+#> 
+function Get-HFSFilter
+{
+    [OutputType([HFSFilter[]] )]
+    [CmdletBinding()]
+    param ( [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'VM')] 
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine[]] $VM,
+        [Parameter( Mandatory = $false, HelpMessage = 'Cloud FileSystem')]
+        [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem = @()
+    )
+    Begin
+    { 
+        [HFSFilter[]] $Result = @()
+    }
+    Process
+    {
+        foreach ( $VimVms in $(Get-VM -Name $VM))
+        {
+            foreach ($device in $VimVms.ExtensionData.COnfig.hardware.device)
+            {
+                if ($device -is [VMware.Vim.VirtualDisk])
+                { 
+                    foreach ($Filter in $device.IndependentFilters)
+                    {
+                        $Value = $Filter.FilterCapabilities.foreach{ ($_.key -eq 'vendorId')?$_.value:'' } 
+                        if ($Value)
+                        {
+                            $Found = (!$CloudFileSystem)
+                            foreach ($Cl in $CloudFileSystem)
+                            {
+                                if ($Value[0].contains($Cl.Id))
+                                {
+                                    $Found = $true
+                                    break
+                                }
+                            }
+                            if ($Found)
+                            {
+                                $Result += [HFSFilter]::new( $Value[0], $device.Backing.Uuid, $device.Backing.FileName)
+                            } 
+                        }
+                        break
+                    }
+                    
+                } 
+            }
+        }
+    } 
+    End
+    { 
+        return $Result 
+    } 
+}
+
+
+<#
+    .SYNOPSIS
+        This cmdlet removethe HFS filter from a virtual machine 
+    .DESCRIPTION
+                This cmdlet removethe HFS filter from a virtual machine.
+    .PARAMETER VM
+        The Virtual Machines object to be reconfigured
+    .PARAMETER CloudFileSystem
+        Unique identifier of an individual cloud file system. Use the cloud file system ID of the cloud file system for which you want to get a list of HFS
+    .EXAMPLE
+        $cloudFileSystem=Get-VCDRCloudFileSystem -name "cloud-backup-1"
+        $Vm=Get-VM -name "test"
+        Remove-HFSFilter -VM $VM
+
+        Description
+        -----------
+        This example remove any HFS filter applied to the VM  
+
+    .NOTES
+        FunctionName    : Remove-HFSFilter
+        Created by      : VMware
+        
+        Modified by     : VMware
+        Date Modified   : 2023/04/10 
+        More info       : https://github.com/vmware/vmware-powercli-for-vmware-cloud-disaster-recovery
+    .LINK
+
+#> 
+
+function Remove-HFSFilter
+{
+    [OutputType([System.Void])]
+    [cmdletbinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    param ( [Parameter( Mandatory = $true, ValueFromPipeline = $true, HelpMessage = 'VM')] 
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine[]] $VM,
+        [Parameter( Mandatory = $false, HelpMessage = 'Cloud FileSystem')]
+        [VMware.VCDRService.CloudFileSystem[]]  $CloudFileSystem = @()
+    )
+    Begin
+    {
+       
+    }
+    Process
+    { 
+        foreach ( $VimVms in $(Get-VM -Name $VM))
+        { 
+            [VMware.Vim.VirtualDeviceConfigSpec[]] $virtualDeviceSpecs = @()
+            foreach ($device in $VimVms.ExtensionData.COnfig.hardware.device)
+            {
+                if ($device -is [VMware.Vim.VirtualDisk])
+                {
+                    #$device || Format-Table -RepeatHeader
+                    foreach ($Filter in $device.IndependentFilters)
+                    {
+                        $Value = $Filter.FilterCapabilities.foreach{ ($_.key -eq 'vendorId')?$_.value:'' } 
+                        if ($Value)
+                        {
+                            $Found = (!$CloudFileSystem)
+                            foreach ($Cl in $CloudFileSystem)
+                            {
+                                if ($Value[0].contains($Cl.Id))
+                                {
+                                    $Found = $true
+                                    break
+                                }
+                            }
+                            if ($Found)
+                            {  
+                                $deviceSpec = New-Object VMware.Vim.VirtualDeviceConfigSpec
+                                $deviceSpec.Operation = [VMware.Vim.VirtualDeviceConfigSpecOperation]::edit
+                                $deviceSpec.Device = $device
+                                $deviceSpec. FilterSpec = [VMware.Vim.VirtualMachineEmptyIndependentFilterSpec]::new()  
+                                $virtualDeviceSpecs += $deviceSpec
+                            }
+                            break
+                        }
+                    
+                    } 
+                }
+            } 
+            if ($virtualDeviceSpecs -and $PSCmdlet.ShouldProcess($VimVms))
+            {
+                $vmConfigSpec = [VMware.Vim.VirtualMachineConfigSpec]::new()
+                $vmConfigSpec.DeviceChange = $virtualDeviceSpecs
+                $vimVms.extensionData.ReconfigVM($vmConfigSpec)  
+            }
+        }
+    }
+    End
+    { 
+         
+    }
+}
 
  
 Set-Alias -Name Connect-VCDRServer -Value Connect-VCDRService
@@ -960,4 +1257,6 @@ Export-ModuleMember -Function Get-VCDRProtectionGroup
 Export-ModuleMember -Function Get-VCDRSnapshot
 Export-ModuleMember -Function Get-VCDRProtectedVm
 Export-ModuleMember -Function Get-VCDRRecoverySddc
- 
+Export-ModuleMember -Function Get-VmFromVCDR
+Export-ModuleMember -Function Remove-HFSFilter
+Export-ModuleMember -Function Get-HFSFilter
