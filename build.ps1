@@ -108,7 +108,7 @@ $BASEDIR = $PSScriptRoot
 
 if ([string]::IsNullOrEmpty($Version))
 { 
-    $Version = Get-Content -Path $BASEDIR\VERSION  
+  $Version = Get-Content -Path $BASEDIR\VERSION  
 }
 $VCDRSERVICE_DIRNAME = 'VMware.VCDRService'
 $PUBLISH_FOLDER = "$BASEDIR\publish"
@@ -186,11 +186,11 @@ $TemplateHeaderPSD1 = @"
 #remaining descriptor contents
 if ($Prerelease)
 { 
-  $IsBeta = "# Prerelease string of this module `nPrerelease   = '$Prerelease'" 
+  $IsBeta = "# Prerelease string of this module `n      Prerelease   = '$Prerelease'" 
 }
 else
 {   
-  $IsBeta = "# Prerelease string of this module `n#Prerelease   = 'Alpha'" 
+  $IsBeta = "# Prerelease string of this module `n      #Prerelease   = 'Alpha'" 
 }
 $TemplatePSD1 = @"
 
@@ -429,10 +429,25 @@ if ($GitHubApiKey)
   $secureString = ($GitHubApiKey | ConvertTo-SecureString -AsPlainText -Force)
   $cred = New-Object System.Management.Automation.PSCredential 'username is ignored', $secureString
   Set-GitHubAuthentication -Credential $cred
-  if ($Publish)
+  if ($Prerelease)
   {
-    New-GitHubRelease -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Tag $Version
-    New-GitHubReleaseAsset -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Release $Version -Path $DestZip 
+    $IsPrerelease = $true
+    $TagVersion = "$Version-$Prerelease"
+  }
+  else
+  {
+    $IsPrerelease = $false
+    $TagVersion = $Version
+  }
+  if ($Publish)
+  { 
+    $Release = New-GitHubRelease -OwnerName $RepositoryOwner -RepositoryName $RepositoryName -Tag $TagVersion -PreRelease:$IsPrerelease 
+    $Release | New-GitHubReleaseAsset -Path $DestZip 
+    $Release | Format-Table
+  }
+  else
+  {
+    Write-Output "To release on github run:`n   New-GitHubRelease -OwnerName ""$RepositoryOwner"" -RepositoryName ""$RepositoryName"" -Tag ""$TagVersion"" -PreRelease:`$$IsPrerelease |New-GitHubReleaseAsset  -Path ""$DestZip"""
   }
 }
 #endregion GitHub
