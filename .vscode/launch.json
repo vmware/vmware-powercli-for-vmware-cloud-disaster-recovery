@@ -10,6 +10,7 @@
             "request": "launch",
             "script": "${file}",
             "args": ["-Token 1C8b_P7rZRZNr158n_dH4ZHZ53Fw6fB3ldkD0cUM22ikitr8L-GSRKQiLlbRfpWT" ,"-Server vcdr-44-238-239-230.app.vcdr.vmware.com"]
+            //.\test.ps1 -Token "1C8b_P7rZRZNr158n_dH4ZHZ53Fw6fB3ldkD0cUM22ikitr8L-GSRKQiLlbRfpWT"  -Server "vcdr-44-238-239-230.app.vcdr.vmware.com"
         }
     ]
 }

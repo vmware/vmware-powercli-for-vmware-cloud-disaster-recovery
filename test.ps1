@@ -74,7 +74,7 @@ $ErrorActionPreference = 'Stop'
 if (    !  $Connect)
 {
     $Version = Get-Content -Path .\VERSION
-    Import-Module ".\publish\VMware.VCDRService\$Version\VMware.VCDRService.psd1"
+   # Import-Module ".\publish\VMware.VCDRService\$Version\VMware.VCDRService.psd1"
     Connect-VIServer -Server 10.24.132.72 -User 'administrator@vsphere.local' -Password 'Datrium@01'
     if ($Server)
     {

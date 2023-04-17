@@ -64,7 +64,7 @@ Param(
   [Parameter(Mandatory = $false)] [string] $GitHubApiKey,
   [Parameter(Mandatory = $false)] [string] $OpenApiFile = 'vcdr.yaml',
   [Parameter(Mandatory = $false)] [Switch] $Publish,
-  [Parameter(Mandatory = $false)] [Switch] $Beta
+  [Parameter(Mandatory = $false)] [String] $Prerelease
   
     
 )
@@ -107,8 +107,8 @@ $PLATFORM = 'AnyCPU'
 $BASEDIR = $PSScriptRoot
 
 if ([string]::IsNullOrEmpty($Version))
-{
-  $Version = Get-Content -Path $BASEDIR\VERSION
+{ 
+    $Version = Get-Content -Path $BASEDIR\VERSION  
 }
 $VCDRSERVICE_DIRNAME = 'VMware.VCDRService'
 $PUBLISH_FOLDER = "$BASEDIR\publish"
@@ -184,9 +184,9 @@ $TemplateHeaderPSD1 = @"
 
 "@
 #remaining descriptor contents
-if ($Beta)
+if ($Prerelease)
 { 
-  $IsBeta = "# Prerelease string of this module `nPrerelease   = 'Beta'" 
+  $IsBeta = "# Prerelease string of this module `nPrerelease   = '$Prerelease'" 
 }
 else
 {   
@@ -397,9 +397,8 @@ $VariableTemplateCoreNetPSD1 = @"
 $TemplateHeaderPSD1 + $VariableTemplateCoreNetPSD1 + $TemplatePSD1 | Set-Content "$VCDRSERVICE\VMware.VCDRService.psd1"
 #endregion NetSelectorDescriptor
 Set-Location $BASEDIR
-#region Archive
-if($Beta){$BetaName="-Beta"}else{$BetaName=""}
-$DestZip =$("$PUBLISH_FOLDER\VMware.VCDRService-{0}{1}.zip" -f $Version.replace( '.', '-'),$BetaName)
+#region Archive 
+$DestZip = "$PUBLISH_FOLDER\VMware.VCDRService-{0}.zip" -f $Version.replace( '.', '-') 
 Compress-Archive -Path @("$PUBLISH_FOLDER\VMware.VCDRService", '.\install.ps1', 'LICENSE', 'NOTICE', 'open_source_licenses.txt') -DestinationPath $DestZip
 #endregion Archive
 
