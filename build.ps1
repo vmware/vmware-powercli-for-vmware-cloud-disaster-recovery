@@ -99,6 +99,25 @@ Write-Host "Root Directory is: $PSScriptRoot"
 Write-Host '#################################################################################'
 Write-Host
 
+# Search for MSBuild in both Program Files directories and the Windows Microsoft.NET folder
+$pathsToSearch = @(
+    "${env:ProgramFiles(x86)}\Microsoft Visual Studio", 
+    "${env:ProgramFiles}\Microsoft Visual Studio",
+    "${env:WINDIR}\Microsoft.NET"
+)
+
+$MSBUILD = Get-ChildItem -Path $pathsToSearch -Filter msbuild.exe -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1
+
+if ($null -ne $MSBUILD) {
+    # MSBuild.exe found, output the path
+    Write-Output "MSBuild.exe found at: $($msbuild.FullName)"
+} else {
+    # MSBuild.exe not found
+    Write-Error "MSBuild.exe not found."
+    exit 1
+}
+
+
 $NSWAG_FRAMEWORK = 'NetCore31'
 $CONFIGURATION = 'Release'
 $FRAMEWORK = 'netcoreapp3.1'
@@ -146,10 +165,10 @@ Set-Location -Path $VCDR_SWAG_DIR
 Set-Location -Path $VCDRSERVICE_SRC
 & dotnet build
 
-& msbuild -t:Rebuild -p:Configuration=$CONFIGURATION -p:Platform=$PLATFORM
+& $MSBUILD -t:Rebuild -p:Configuration=$CONFIGURATION -p:Platform=$PLATFORM
 Copy-Item -Path "$VCDRSERVICE_SRC\*.cs" -Destination $VCDRSERVICE_LEGACY_SRC -Verbose
 Set-Location -Path $VCDRSERVICE_LEGACY_SRC
-& msbuild VMware.VCDRService_legacy.csproj /p:Configuration=$CONFIGURATION /p:Platform=$PLATFORM /p:TargetFrameworkVersion=$LEGACYFRAMEWORK -t:Rebuild
+& $MSBUILD VMware.VCDRService_legacy.csproj /p:Configuration=$CONFIGURATION /p:Platform=$PLATFORM /p:TargetFrameworkVersion=$LEGACYFRAMEWORK -t:Rebuild
 Set-Location $BASEDIR
 #endregion build
 

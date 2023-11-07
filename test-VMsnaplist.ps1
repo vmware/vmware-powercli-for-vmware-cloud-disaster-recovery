@@ -72,8 +72,7 @@ Param(
 )
  
  
-
-Set-StrictMode -Version 3
+ 
 $ErrorActionPreference = 'Stop' 
 if ($Password -and $username) {
     $secureString = ConvertTo-SecureString -AsPlainText -Force -String $Password
@@ -82,7 +81,7 @@ if ($Password -and $username) {
     $Credential = Get-Credential
 }
 
-if (    !  $Connect) {
+if (! $Connect) {
     $Version = Get-Content -Path .\VERSION
     Write-Host "VMware VCDR PowerCLI version $Version"
     # Import-Module ".\publish\VMware.VCDRService\$Version\VMware.VCDRService.psd1"
@@ -97,28 +96,6 @@ if (    !  $Connect) {
     }
 }
 
-$r = Get-VM 'Max*'
-Get-HFSFilter -VM $r | Format-Table
-Remove-HFSFilter -VM $r -WhatIf
-$r = Get-VM -Name $r
-Get-HFSFilter -VM $r | Format-Table
-#$VimVms = Get-VM max-test-removeHFS
-#$res = Get-HfsFilter -VM $VimVms
-
-#$res | Format-Table -RepeatHeader
- 
-#Remove-HfsFilter -VM $VimVms
-
- 
-Get-VCDRInstance
-    
-$RecoverySDDC = Get-VCDRRecoverySddc
-if ($RecoverySDDC) {
-    Write-Host 'Recovery SDDCs:' -NoNewline
-    $RecoverySDDC | Format-Table
-} else {
-    Write-Host 'No Recovery SDDCs configured'
-}
 $cloudFileSystems = Get-VCDRCloudFileSystem
 if ($cloudFileSystems) {
     foreach ($cloudFileSystem in $cloudFileSystems) {
@@ -158,30 +135,18 @@ if ($cloudFileSystems) {
                 $Snapshots | Format-Table -RepeatHeader 
             } else {
                 Write-Host 'No Snapshots'
-            }
+            } 
+        } else {
+            Write-Host 'No Protection Groups'
         }
-    } else {
-        Write-Host 'No Protection Groups'
     }
 
-    Write-Host 'Protected Sites:' -NoNewline
-    $ProtectedSites = Get-VCDRProtectedSite -CloudFileSystem $cloudFileSystem -Vcenter $global:DefaultVIServers[0] -ProtectionGroup $ProtectionGroups
-    $ProtectedSites | Format-Table 
-    #[VMware.VCDRService.VmSummary[]]
-    $Vms = Get-VCDRProtectedVm -CloudFileSystem $cloudFileSystem
-
-    [VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine[]]   $VimVms = $Vms | Get-VmFromVCDR -ErrorAction Continue
-        
-    if ($VimVms) { 
-        $VimVms | Format-Table -RepeatHeader
-        Write-Host 'Virtual Machines:' -NoNewline 
-    } else {
-        Write-Host 'No Virtual Machines on this Cloud File System'
-    }
     
     Write-Host "`n********************`n"
+}else {
+    Write-Host 'No VCDR CFS available'
 }
- 
+
     
 Disconnect-VCDRService
 Write-Host "Bye.`n"
