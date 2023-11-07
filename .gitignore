@@ -5,4 +5,4 @@
 c\#.netcode/VCDRTest/VCDRTest.csproj.user
 c\#.netcode/VCDRTest/VCDRTest.csproj.user
 .vscode/launch.json 
-publish/
+publish/VMware.VCDRService*
